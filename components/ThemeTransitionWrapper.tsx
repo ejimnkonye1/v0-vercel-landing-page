@@ -1,13 +1,18 @@
 'use client'
 
 import { useTheme } from '@/lib/theme-context'
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback, type ReactNode } from 'react'
 
-interface ThemeTransitionWrapperProps {}
+interface ThemeTransitionWrapperProps {
+  children: ReactNode
+}
 
-export function ThemeTransitionWrapper({}: ThemeTransitionWrapperProps) {
+export function ThemeTransitionWrapper({ children }: ThemeTransitionWrapperProps) {
   const { isDark, isAnimating, clipCenter } = useTheme()
   const [maxRadius, setMaxRadius] = useState(2000)
+  const darkLayerRef = useRef<HTMLDivElement>(null)
+  const lightLayerRef = useRef<HTMLDivElement>(null)
+  const isScrolling = useRef(false)
   const [mounted, setMounted] = useState(false)
 
   // Track animation with explicit radius values
@@ -85,6 +90,39 @@ export function ThemeTransitionWrapper({}: ThemeTransitionWrapperProps) {
     }
   }, [isAnimating, transitioning])
 
+  // Sync scroll between both layers
+  const handleScroll = useCallback((source: 'dark' | 'light') => {
+    if (isScrolling.current) return
+    isScrolling.current = true
+
+    const sourceRef = source === 'dark' ? darkLayerRef : lightLayerRef
+    const targetRef = source === 'dark' ? lightLayerRef : darkLayerRef
+
+    if (sourceRef.current && targetRef.current) {
+      targetRef.current.scrollTop = sourceRef.current.scrollTop
+    }
+
+    requestAnimationFrame(() => {
+      isScrolling.current = false
+    })
+  }, [])
+
+  useEffect(() => {
+    const darkLayer = darkLayerRef.current
+    const lightLayer = lightLayerRef.current
+
+    const onDarkScroll = () => handleScroll('dark')
+    const onLightScroll = () => handleScroll('light')
+
+    darkLayer?.addEventListener('scroll', onDarkScroll)
+    lightLayer?.addEventListener('scroll', onLightScroll)
+
+    return () => {
+      darkLayer?.removeEventListener('scroll', onDarkScroll)
+      lightLayer?.removeEventListener('scroll', onLightScroll)
+    }
+  }, [handleScroll])
+
   const getClipPath = (layer: 'dark' | 'light') => {
     const radius = layer === 'dark' ? darkRadius : lightRadius
     const center = savedClipCenter.current
@@ -94,50 +132,59 @@ export function ThemeTransitionWrapper({}: ThemeTransitionWrapperProps) {
   const getZIndex = (layer: 'dark' | 'light') => {
     // During transition, the expanding layer should be on top
     if (transitioning) {
-      return isDark ? (layer === 'dark' ? 45 : 35) : (layer === 'light' ? 45 : 35)
+      return isDark ? (layer === 'dark' ? 60 : 50) : (layer === 'light' ? 60 : 50)
     }
     // When not transitioning, current theme on top
-    return (layer === 'dark' && isDark) || (layer === 'light' && !isDark) ? 45 : 35
+    return (layer === 'dark' && isDark) || (layer === 'light' && !isDark) ? 60 : 50
   }
 
   if (!mounted) {
-    return null
+    return (
+      <div className="min-h-screen bg-background text-foreground">
+        {children}
+      </div>
+    )
   }
 
   return (
-    <>
-      <style jsx>{`
-        .dark-layer {
-          clip-path: ${getClipPath('dark')};
-          transition: ${
-            transitioning && isDark
-              ? 'clip-path 1.2s cubic-bezier(0.4, 0, 0.2, 1)'
-              : 'none'
-          };
-          z-index: ${getZIndex('dark')};
-          display: ${transitioning ? 'block' : 'none'};
-        }
-        .light-layer {
-          clip-path: ${getClipPath('light')};
-          transition: ${
-            transitioning && !isDark
-              ? 'clip-path 1.2s cubic-bezier(0.4, 0, 0.2, 1)'
-              : 'none'
-          };
-          z-index: ${getZIndex('light')};
-          display: ${transitioning ? 'block' : 'none'};
-        }
-      `}</style>
-
-      {/* Dark Theme Layer - only for theme overlay animation */}
-      <div className="dark-layer fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="dark fixed inset-0 bg-background" />
+    <div className="relative min-h-screen">
+      {/* Dark Theme Layer */}
+      <div
+        ref={darkLayerRef}
+        className="fixed inset-0 overflow-y-auto"
+        style={{
+          clipPath: getClipPath('dark'),
+          transition: transitioning && isDark
+            ? 'clip-path 1.2s cubic-bezier(0.4, 0, 0.2, 1)'
+            : 'none',
+          zIndex: getZIndex('dark'),
+        }}
+      >
+        <div className="dark">
+          <div className="min-h-screen bg-background text-foreground">
+            {children}
+          </div>
+        </div>
       </div>
 
-      {/* Light Theme Layer - only for theme overlay animation */}
-      <div className="light-layer fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="light fixed inset-0 bg-background" />
+      {/* Light Theme Layer */}
+      <div
+        ref={lightLayerRef}
+        className="fixed inset-0 overflow-y-auto"
+        style={{
+          clipPath: getClipPath('light'),
+          transition: transitioning && !isDark
+            ? 'clip-path 1.2s cubic-bezier(0.4, 0, 0.2, 1)'
+            : 'none',
+          zIndex: getZIndex('light'),
+        }}
+      >
+        <div className="light">
+          <div className="min-h-screen bg-background text-foreground">
+            {children}
+          </div>
+        </div>
       </div>
-    </>
+    </div>
   )
 }

@@ -1,5 +1,6 @@
 'use client'
 
+import { motion } from 'framer-motion'
 import { Plus, Bell, Zap } from 'lucide-react'
 
 export function HowItWorks() {
@@ -34,44 +35,54 @@ export function HowItWorks() {
     >
       <div className="max-w-7xl mx-auto">
         {/* Section Title */}
-        <div className="text-center mb-16">
-          <h2 className="text-4xl sm:text-5xl font-semibold text-foreground mb-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+          className="text-center mb-16"
+        >
+          <h2 className="text-4xl sm:text-5xl font-semibold text-white mb-4">
             How It Works
           </h2>
-          <p className="text-lg text-gray-500 max-w-2xl mx-auto">
+          <p className="text-lg text-gray-400 max-w-2xl mx-auto">
             Three simple steps to take control of your subscriptions
           </p>
-        </div>
+        </motion.div>
 
         {/* Feature Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {features.map((feature, index) => {
             const Icon = feature.icon
             return (
-              <div
+              <motion.div
                 key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                viewport={{ once: true }}
                 className="group p-8 bg-[#0d0d0d] border border-[#1f1f1f] rounded-2xl hover:border-[#333333] transition-all duration-300 hover:-translate-y-1"
               >
                 {/* Step Number */}
-                <div className="text-5xl font-light text-gray-500 mb-6 group-hover:text-gray-400 transition-colors duration-300">
+                <div className="text-5xl font-light text-gray-600 mb-6 group-hover:text-gray-500 transition-colors duration-300">
                   {feature.number}
                 </div>
 
                 {/* Icon */}
                 <div className="mb-6">
-                  <Icon className="w-12 h-12 text-foreground group-hover:text-gray-300 transition-colors duration-300" strokeWidth={1.5} />
+                  <Icon className="w-12 h-12 text-white group-hover:text-gray-300 transition-colors duration-300" strokeWidth={1.5} />
                 </div>
 
                 {/* Title */}
-                <h3 className="text-2xl font-semibold text-foreground mb-3">
+                <h3 className="text-2xl font-semibold text-white mb-3">
                   {feature.title}
                 </h3>
 
                 {/* Description */}
-                <p className="text-base text-gray-500 group-hover:text-gray-400 transition-colors duration-300 leading-relaxed">
+                <p className="text-base text-gray-400 group-hover:text-gray-300 transition-colors duration-300 leading-relaxed">
                   {feature.description}
                 </p>
-              </div>
+              </motion.div>
             )
           })}
         </div>

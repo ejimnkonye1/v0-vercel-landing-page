@@ -2,6 +2,7 @@ export type BillingCycle = 'monthly' | 'yearly'
 export type SubscriptionStatus = 'active' | 'trial' | 'cancelled'
 export type CancellationDifficulty = 'easy' | 'medium' | 'hard'
 export type ReminderType = 'trial_ending' | 'renewal' | 'unused'
+export type Currency = 'USD' | 'EUR' | 'GBP' | 'CAD' | 'AUD' | 'JPY' | 'INR' | 'NGN'
 
 export interface Subscription {
   id: string
@@ -61,6 +62,10 @@ export interface UserPreferences {
   email_reminders_trial: boolean
   in_app_reminders: boolean
   reminder_days_before: ReminderDaysBefore
+  currency: Currency
+  budget_enabled: boolean
+  monthly_budget: number | null
+  budget_alert_threshold: number
   created_at: string
   updated_at: string
 }

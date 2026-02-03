@@ -9,6 +9,10 @@ const DEFAULT_PREFERENCES = {
   email_reminders_trial: true,
   in_app_reminders: true,
   reminder_days_before: 2 as const,
+  currency: 'USD' as const,
+  budget_enabled: false,
+  monthly_budget: null as number | null,
+  budget_alert_threshold: 80,
 }
 
 export function usePreferences() {
@@ -54,6 +58,10 @@ export function usePreferences() {
           email_reminders_trial: preferences.email_reminders_trial,
           in_app_reminders: preferences.in_app_reminders,
           reminder_days_before: preferences.reminder_days_before,
+          currency: preferences.currency,
+          budget_enabled: preferences.budget_enabled,
+          monthly_budget: preferences.monthly_budget,
+          budget_alert_threshold: preferences.budget_alert_threshold,
         }
       : DEFAULT_PREFERENCES
 
@@ -79,6 +87,36 @@ export function usePreferences() {
 
   useEffect(() => {
     fetchPreferences()
+
+    // Real-time listener for preference changes
+    const supabase = supabaseRef.current
+    const setupChannel = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return null
+
+      return supabase
+        .channel(`preferences-changes-${user.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'user_preferences',
+            filter: `user_id=eq.${user.id}`,
+          },
+          () => {
+            fetchPreferences()
+          }
+        )
+        .subscribe()
+    }
+
+    let channel: ReturnType<typeof supabase.channel> | null = null
+    setupChannel().then((ch) => { channel = ch })
+
+    return () => {
+      if (channel) supabase.removeChannel(channel)
+    }
   }, [fetchPreferences])
 
   const effectivePreferences = preferences ?? {

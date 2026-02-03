@@ -1,4 +1,3 @@
-import { StarfieldBackground } from '@/components/StarfieldBackground'
 import { Navbar } from '@/components/Navbar'
 import { Hero } from '@/components/Hero'
 import { HowItWorks } from '@/components/HowItWorks'
@@ -10,8 +9,7 @@ import { Footer } from '@/components/Footer'
 
 export default function Home() {
   return (
-    <>
-      <StarfieldBackground />
+    <div className="bg-[#0a0a0a]">
       <Navbar />
       <main>
         <Hero />
@@ -22,6 +20,6 @@ export default function Home() {
         <CTA />
       </main>
       <Footer />
-    </>
+    </div>
   )
 }

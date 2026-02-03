@@ -1,5 +1,7 @@
 'use client'
 
+import { motion } from 'framer-motion'
+
 export function Stats() {
   const stats = [
     {
@@ -22,17 +24,24 @@ export function Stats() {
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
           {stats.map((stat, index) => (
-            <div key={index} className="text-center">
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: index * 0.1 }}
+              viewport={{ once: true }}
+              className="text-center"
+            >
               {/* Large Number */}
-              <div className="text-5xl sm:text-6xl font-bold text-foreground mb-3">
+              <div className="text-5xl sm:text-6xl font-bold text-white mb-3">
                 {stat.number}
               </div>
 
               {/* Label */}
-              <p className="text-base sm:text-lg text-gray-500">
+              <p className="text-base sm:text-lg text-gray-400">
                 {stat.label}
               </p>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>

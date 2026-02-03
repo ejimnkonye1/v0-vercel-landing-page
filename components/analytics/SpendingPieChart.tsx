@@ -2,27 +2,34 @@
 
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 import { motion } from 'framer-motion'
+import { useTheme } from '@/lib/theme-context'
+import { useCurrency } from '@/contexts/CurrencyContext'
 
 interface SpendingPieChartProps {
   data: { name: string; value: number }[]
 }
 
-const COLORS = ['#ffffff', '#cccccc', '#999999', '#666666', '#444444', '#222222']
-
-const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount)
+const COLORS_DARK = ['#ffffff', '#cccccc', '#999999', '#666666', '#444444', '#222222']
+const COLORS_LIGHT = ['#000000', '#333333', '#666666', '#999999', '#cccccc', '#eeeeee']
 
 export function SpendingPieChart({ data }: SpendingPieChartProps) {
+  const { isDark } = useTheme()
+  const { formatAmount } = useCurrency()
   const total = data.reduce((sum, d) => sum + d.value, 0)
+  const COLORS = isDark ? COLORS_DARK : COLORS_LIGHT
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const item = payload[0]
       return (
-        <div className="bg-[#111111] border border-[#222222] rounded-lg px-3 py-2 shadow-xl">
-          <p className="text-white text-sm font-medium">{item.name}</p>
-          <p className="text-[#999999] text-xs">
-            {formatCurrency(item.value)} ({((item.value / total) * 100).toFixed(0)}%)
+        <div className={`rounded-lg px-3 py-2 shadow-xl border ${
+          isDark
+            ? 'bg-[#111111] border-[#222222]'
+            : 'bg-white border-gray-300'
+        }`}>
+          <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-black'}`}>{item.name}</p>
+          <p className={`text-xs ${isDark ? 'text-[#999999]' : 'text-gray-600'}`}>
+            {formatAmount(item.value)} ({((item.value / total) * 100).toFixed(0)}%)
           </p>
         </div>
       )
@@ -35,14 +42,18 @@ export function SpendingPieChart({ data }: SpendingPieChartProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="bg-[#0A0A0A] border border-[#1A1A1A] rounded-2xl p-6"
+      className={`rounded-2xl p-6 border ${
+        isDark
+          ? 'bg-[#0A0A0A] border-[#1A1A1A]'
+          : 'bg-gray-50 border-gray-300'
+      }`}
     >
-      <h3 className="text-white font-semibold text-sm mb-1">Spending by Category</h3>
-      <p className="text-[#555555] text-xs mb-6">Monthly breakdown</p>
+      <h3 className={`font-semibold text-sm mb-1 ${isDark ? 'text-white' : 'text-black'}`}>Spending by Category</h3>
+      <p className={`text-xs mb-6 ${isDark ? 'text-[#555555]' : 'text-gray-600'}`}>Monthly breakdown</p>
 
       {data.length === 0 ? (
         <div className="h-64 flex items-center justify-center">
-          <p className="text-[#444444] text-sm">No data available</p>
+          <p className={`text-sm ${isDark ? 'text-[#444444]' : 'text-gray-500'}`}>No data available</p>
         </div>
       ) : (
         <div className="flex items-center gap-6">
@@ -80,8 +91,8 @@ export function SpendingPieChart({ data }: SpendingPieChartProps) {
                   style={{ backgroundColor: COLORS[i % COLORS.length] }}
                 />
                 <div>
-                  <p className="text-white text-xs font-medium">{item.name}</p>
-                  <p className="text-[#555555] text-xs">{formatCurrency(item.value)}</p>
+                  <p className={`text-xs font-medium ${isDark ? 'text-white' : 'text-black'}`}>{item.name}</p>
+                  <p className={`text-xs ${isDark ? 'text-[#555555]' : 'text-gray-600'}`}>{formatAmount(item.value)}</p>
                 </div>
               </div>
             ))}

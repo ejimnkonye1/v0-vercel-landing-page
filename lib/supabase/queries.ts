@@ -98,6 +98,63 @@ export async function createSubscription(formData: SubscriptionFormData) {
   return { data: data as Subscription | null, error }
 }
 
+export async function bulkCreateSubscriptions(
+  subscriptions: SubscriptionFormData[]
+): Promise<{ created: number; errors: string[] }> {
+  const supabase = createClient()
+  const userId = await getCurrentUserId()
+  if (!userId) return { created: 0, errors: ['Not authenticated'] }
+
+  // Get user's preferred reminder advance days
+  const { data: prefs } = await supabase
+    .from('user_preferences')
+    .select('reminder_days_before')
+    .eq('user_id', userId)
+    .single()
+  const daysBefore = prefs?.reminder_days_before ?? 2
+
+  let created = 0
+  const errors: string[] = []
+
+  for (const formData of subscriptions) {
+    const { data, error } = await supabase
+      .from('subscriptions')
+      .insert({
+        ...formData,
+        user_id: userId,
+        logo_identifier: formData.logo_identifier || formData.name.toLowerCase().trim(),
+      })
+      .select()
+      .single()
+
+    if (error) {
+      errors.push(`Failed to create ${formData.name}: ${error.message}`)
+      continue
+    }
+
+    if (data) {
+      created++
+
+      // Auto-create reminder before renewal
+      const renewalDate = new Date(formData.renewal_date)
+      const reminderDate = new Date(renewalDate)
+      reminderDate.setDate(reminderDate.getDate() - daysBefore)
+
+      if (reminderDate > new Date()) {
+        await supabase.from('reminders').insert({
+          user_id: userId,
+          subscription_id: data.id,
+          reminder_type: 'renewal',
+          reminder_date: reminderDate.toISOString(),
+          is_sent: false,
+        })
+      }
+    }
+  }
+
+  return { created, errors }
+}
+
 export async function updateSubscription(id: string, formData: Partial<SubscriptionFormData>) {
   const supabase = createClient()
   const userId = await getCurrentUserId()

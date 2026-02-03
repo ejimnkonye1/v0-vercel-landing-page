@@ -3,16 +3,17 @@
 import { useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { FiTrendingUp, FiAlertCircle, FiDollarSign } from 'react-icons/fi'
+import { useTheme } from '@/lib/theme-context'
+import { useCurrency } from '@/contexts/CurrencyContext'
 import type { Subscription } from '@/lib/types'
 
 interface InsightsCardProps {
   subscriptions: Subscription[]
 }
 
-const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount)
-
 export function InsightsCard({ subscriptions }: InsightsCardProps) {
+  const { isDark } = useTheme()
+  const { formatAmount } = useCurrency()
   const insights = useMemo(() => {
     const result: { icon: any; title: string; description: string }[] = []
     const active = subscriptions.filter(
@@ -66,7 +67,7 @@ export function InsightsCard({ subscriptions }: InsightsCardProps) {
       result.push({
         icon: FiDollarSign,
         title: 'Potential Savings',
-        description: `Save up to ${formatCurrency(potentialSavings)}/yr by switching ${monthlyOnly.length} subscription${monthlyOnly.length > 1 ? 's' : ''} to annual plans`,
+        description: `Save up to ${formatAmount(potentialSavings)}/yr by switching ${monthlyOnly.length} subscription${monthlyOnly.length > 1 ? 's' : ''} to annual plans`,
       })
     }
 
@@ -82,7 +83,7 @@ export function InsightsCard({ subscriptions }: InsightsCardProps) {
       transition={{ duration: 0.4, delay: 0.2 }}
       className="space-y-4"
     >
-      <h3 className="text-white font-semibold text-sm">Insights</h3>
+      <h3 className={`font-semibold text-sm ${isDark ? 'text-white' : 'text-black'}`}>Insights</h3>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {insights.map((insight, i) => {
           const Icon = insight.icon
@@ -92,13 +93,19 @@ export function InsightsCard({ subscriptions }: InsightsCardProps) {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: i * 0.1 }}
-              className="bg-[#0A0A0A] border border-[#1A1A1A] rounded-2xl p-5 hover:border-[#222222] transition-all duration-300"
+              className={`rounded-2xl p-5 border transition-all duration-300 ${
+                isDark
+                  ? 'bg-[#0A0A0A] border-[#1A1A1A] hover:border-[#222222]'
+                  : 'bg-gray-50 border-gray-300 hover:border-gray-400'
+              }`}
             >
-              <div className="w-8 h-8 bg-[#111111] rounded-lg flex items-center justify-center mb-3">
-                <Icon className="w-4 h-4 text-[#666666]" />
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center mb-3 ${
+                isDark ? 'bg-[#111111]' : 'bg-gray-300'
+              }`}>
+                <Icon className={`w-4 h-4 ${isDark ? 'text-[#666666]' : 'text-gray-600'}`} />
               </div>
-              <p className="text-white text-sm font-medium mb-1">{insight.title}</p>
-              <p className="text-[#555555] text-xs leading-relaxed">
+              <p className={`text-sm font-medium mb-1 ${isDark ? 'text-white' : 'text-black'}`}>{insight.title}</p>
+              <p className={`text-xs leading-relaxed ${isDark ? 'text-[#555555]' : 'text-gray-600'}`}>
                 {insight.description}
               </p>
             </motion.div>

@@ -11,6 +11,8 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 import { motion } from 'framer-motion'
+import { useTheme } from '@/lib/theme-context'
+import { useCurrency } from '@/contexts/CurrencyContext'
 import type { Subscription } from '@/lib/types'
 
 interface SpendingLineChartProps {
@@ -18,6 +20,8 @@ interface SpendingLineChartProps {
 }
 
 export function SpendingLineChart({ subscriptions }: SpendingLineChartProps) {
+  const { isDark } = useTheme()
+  const { formatAmount, symbol } = useCurrency()
   const chartData = useMemo(() => {
     const months: { name: string; spend: number }[] = []
     const now = new Date()
@@ -56,10 +60,14 @@ export function SpendingLineChart({ subscriptions }: SpendingLineChartProps) {
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-[#111111] border border-[#222222] rounded-lg px-3 py-2 shadow-xl">
-          <p className="text-[#999999] text-xs mb-1">{label}</p>
-          <p className="text-white text-sm font-semibold">
-            ${payload[0].value.toFixed(2)}
+        <div className={`rounded-lg px-3 py-2 shadow-xl border ${
+          isDark
+            ? 'bg-[#111111] border-[#222222]'
+            : 'bg-white border-gray-300'
+        }`}>
+          <p className={`text-xs mb-1 ${isDark ? 'text-[#999999]' : 'text-gray-600'}`}>{label}</p>
+          <p className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-black'}`}>
+            {formatAmount(payload[0].value)}
           </p>
         </div>
       )
@@ -72,31 +80,35 @@ export function SpendingLineChart({ subscriptions }: SpendingLineChartProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: 0.1 }}
-      className="bg-[#0A0A0A] border border-[#1A1A1A] rounded-2xl p-6"
+      className={`rounded-2xl p-6 border ${
+        isDark
+          ? 'bg-[#0A0A0A] border-[#1A1A1A]'
+          : 'bg-gray-50 border-gray-300'
+      }`}
     >
-      <h3 className="text-white font-semibold text-sm mb-1">Spending Trend</h3>
-      <p className="text-[#555555] text-xs mb-6">Last 12 months</p>
+      <h3 className={`font-semibold text-sm mb-1 ${isDark ? 'text-white' : 'text-black'}`}>Spending Trend</h3>
+      <p className={`text-xs mb-6 ${isDark ? 'text-[#555555]' : 'text-gray-600'}`}>Last 12 months</p>
 
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#1A1A1A" vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#1A1A1A' : '#e5e7eb'} vertical={false} />
             <XAxis
               dataKey="name"
-              stroke="#444444"
+              stroke={isDark ? '#444444' : '#9ca3af'}
               fontSize={11}
               tickLine={false}
               axisLine={false}
             />
             <YAxis
-              stroke="#444444"
+              stroke={isDark ? '#444444' : '#9ca3af'}
               fontSize={11}
               tickLine={false}
               axisLine={false}
-              tickFormatter={(value) => `$${value}`}
+              tickFormatter={(value) => `${symbol}${value}`}
             />
             <Tooltip content={<CustomTooltip />} />
-            <Bar dataKey="spend" fill="#ffffff" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="spend" fill={isDark ? '#ffffff' : '#000000'} radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>

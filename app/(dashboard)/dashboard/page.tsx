@@ -3,16 +3,21 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { FiPlus } from 'react-icons/fi'
+import { useTheme } from '@/lib/theme-context'
 import { useSubscriptions } from '@/hooks/useSubscriptions'
+import { usePreferences } from '@/hooks/usePreferences'
 import { StatsCards } from '@/components/dashboard/StatsCards'
 import { SpendingChart } from '@/components/dashboard/SpendingChart'
 import { UpcomingRenewals } from '@/components/dashboard/UpcomingRenewals'
 import { SubscriptionGrid } from '@/components/dashboard/SubscriptionGrid'
 import { AddSubscriptionModal } from '@/components/dashboard/AddSubscriptionModal'
+import { BudgetProgressBar } from '@/components/dashboard/BudgetProgressBar'
+import { BudgetAlert } from '@/components/ui/BudgetAlert'
 import { deleteSubscription } from '@/lib/supabase/queries'
 import type { Subscription } from '@/lib/types'
 
 export default function DashboardPage() {
+  const { isDark } = useTheme()
   const {
     subscriptions,
     loading,
@@ -23,10 +28,22 @@ export default function DashboardPage() {
     activeCount,
     cancelledSavings,
   } = useSubscriptions()
+  const { preferences } = usePreferences()
 
+  const showBudget = preferences.budget_enabled && preferences.monthly_budget && preferences.monthly_budget > 0
+
+  const [isModalOpening, setIsModalOpening] = useState(false)
+  const [isHovering, setIsHovering] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
   const [editingSub, setEditingSub] = useState<Subscription | null>(null)
   const [deleteError, setDeleteError] = useState<string | null>(null)
+
+  const handleOpenModal = () => {
+    setIsModalOpening(true)
+    setEditingSub(null)
+    setModalOpen(true)
+    setTimeout(() => setIsModalOpening(false), 600)
+  }
 
   const handleEdit = (sub: Subscription) => {
     setEditingSub(sub)
@@ -51,7 +68,7 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="w-6 h-6 border-2 border-[#222222] border-t-white rounded-full animate-spin" />
+        <div className={`w-6 h-6 border-2 rounded-full animate-spin ${isDark ? 'border-[#222222] border-t-white' : 'border-gray-300 border-t-black'}`} />
       </div>
     )
   }
@@ -64,16 +81,37 @@ export default function DashboardPage() {
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
       >
-        <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-        <p className="text-[#555555] text-sm mt-1">
+        
+        <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-black'}`}>Dashboard</h1>
+        <p className={`text-sm mt-1 ${isDark ? 'text-[#555555]' : 'text-[#999999]'}`}>
           Manage and track all your subscriptions
         </p>
       </motion.div>
 
       {/* Error banner */}
       {(error || deleteError) && (
-        <div className="bg-[#1A1A1A] border border-[#333333] rounded-lg p-3 mb-6">
-          <p className="text-[#999999] text-sm">{error || deleteError}</p>
+        <div className={`rounded-lg p-3 mb-6 ${isDark ? 'bg-[#1A1A1A] border border-[#333333]' : 'bg-red-50 border border-red-200'}`}>
+          <p className={`text-sm ${isDark ? 'text-[#999999]' : 'text-red-600'}`}>{error || deleteError}</p>
+        </div>
+      )}
+
+      {/* Budget Alert */}
+      {showBudget && (
+        <BudgetAlert
+          monthlySpend={totalMonthlySpend}
+          budgetLimit={preferences.monthly_budget!}
+          threshold={preferences.budget_alert_threshold || 80}
+        />
+      )}
+
+      {/* Budget Progress Bar */}
+      {showBudget && (
+        <div className="mb-6">
+          <BudgetProgressBar
+            monthlySpend={totalMonthlySpend}
+            budgetLimit={preferences.monthly_budget!}
+            threshold={preferences.budget_alert_threshold || 80}
+          />
         </div>
       )}
 
@@ -107,13 +145,17 @@ export default function DashboardPage() {
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ type: 'spring', bounce: 0.3, delay: 0.5 }}
-        onClick={() => {
-          setEditingSub(null)
-          setModalOpen(true)
-        }}
-        className="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 w-14 h-14 bg-white text-black rounded-full shadow-2xl flex items-center justify-center hover:bg-gray-100 hover:scale-105 active:scale-95 transition-all duration-200 z-30"
+        onClick={handleOpenModal}
+        onHoverStart={() => setIsHovering(true)}
+        onHoverEnd={() => setIsHovering(false)}
+        className={`fixed bottom-6 right-6 sm:bottom-8 sm:right-8 w-14 h-14 rounded-full shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-200 z-30 ${isDark ? 'bg-white text-black hover:bg-gray-100' : 'bg-black text-white hover:bg-gray-900'}`}
       >
-        <FiPlus className="w-6 h-6" />
+        <motion.div
+          animate={{ rotate: isHovering || isModalOpening ? 360 : 0 }}
+          transition={{ duration: 0.6, ease: 'easeInOut' }}
+        >
+          <FiPlus className="w-6 h-6" />
+        </motion.div>
       </motion.button>
 
       {/* Modal */}

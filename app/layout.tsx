@@ -41,8 +41,9 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`font-sans antialiased bg-background text-foreground`}>
         <ThemeProvider>
-          <ThemeTransitionWrapper />
-          {children}
+          <ThemeTransitionWrapper>
+            {children}
+          </ThemeTransitionWrapper>
         </ThemeProvider>
         <Analytics />
       </body>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FiX, FiLoader } from 'react-icons/fi'
+import { useTheme } from '@/lib/theme-context'
 import { createSubscription, updateSubscription, deleteSubscription } from '@/lib/supabase/queries'
 import { getSubscriptionIcon } from '@/lib/icons'
 import type { Subscription, SubscriptionFormData, BillingCycle, SubscriptionStatus, CancellationDifficulty } from '@/lib/types'
@@ -100,6 +101,7 @@ export function AddSubscriptionModal({
   onSaved,
   editSubscription,
 }: AddSubscriptionModalProps) {
+  const { isDark } = useTheme()
   const [loading, setLoading] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -235,10 +237,14 @@ export function AddSubscriptionModal({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: 'spring', bounce: 0.2, duration: 0.4 }}
-            className="relative bg-[#0A0A0A] border border-[#1A1A1A] rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl scroll-smooth"
+            className={`relative rounded-2xl w-full max-w-md max-h-[85vh] overflow-y-auto shadow-2xl scroll-smooth border ${
+              isDark
+                ? 'bg-[#0A0A0A] border-[#1A1A1A]'
+                : 'bg-white border-gray-300'
+            }`}
             style={{
               scrollbarWidth: 'thin',
-              scrollbarColor: '#333333 transparent',
+              scrollbarColor: isDark ? '#333333 transparent' : '#d0d0d0 transparent',
             }}
           >
             <style>{`
@@ -249,37 +255,49 @@ export function AddSubscriptionModal({
                 background: transparent;
               }
               .scroll-smooth::-webkit-scrollbar-thumb {
-                background: #333333;
+                background: ${isDark ? '#333333' : '#d0d0d0'};
                 border-radius: 3px;
               }
               .scroll-smooth::-webkit-scrollbar-thumb:hover {
-                background: #555555;
+                background: ${isDark ? '#555555' : '#b0b0b0'};
               }
             `}</style>
 
             {/* Header */}
-            <div className="sticky top-0 bg-[#0A0A0A] border-b border-[#1A1A1A] px-6 py-5 flex items-center justify-between z-10 backdrop-blur-sm bg-[#0A0A0A]/95">
+            <div className={`sticky top-0 px-6 py-5 flex items-center justify-between z-10 backdrop-blur-sm border-b ${
+              isDark
+                ? 'bg-[#0A0A0A]/95 border-[#1A1A1A]'
+                : 'bg-white/95 border-gray-200'
+            }`}>
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-gradient-to-br from-[#1A1A1A] to-[#0D0D0D] border border-[#2A2A2A] rounded-xl flex items-center justify-center">
-                  <PreviewIcon className="w-5 h-5 text-white" />
+                <div className={`w-10 h-10 border rounded-xl flex items-center justify-center ${
+                  isDark
+                    ? 'bg-gradient-to-br from-[#1A1A1A] to-[#0D0D0D] border-[#2A2A2A]'
+                    : 'bg-gradient-to-br from-gray-300 to-gray-200 border-gray-400'
+                }`}>
+                  <PreviewIcon className={`w-5 h-5 ${isDark ? 'text-white' : 'text-black'}`} />
                 </div>
                 <div>
-                  <h2 className="text-white font-semibold text-lg">
+                  <h2 className={`font-semibold text-lg ${isDark ? 'text-white' : 'text-black'}`}>
                     {isEditing ? 'Edit Subscription' : 'Add Subscription'}
                   </h2>
-                  <p className="text-[#666666] text-xs">Manage your subscription details</p>
+                  <p className={`text-xs ${isDark ? 'text-[#666666]' : 'text-gray-600'}`}>Manage your subscription details</p>
                 </div>
               </div>
               <button
                 onClick={onClose}
-                className="text-[#555555] hover:text-white p-2 rounded-lg hover:bg-[#111111] transition-all duration-200"
+                className={`p-2 rounded-lg transition-all duration-200 ${
+                  isDark
+                    ? 'text-[#555555] hover:text-white hover:bg-[#111111]'
+                    : 'text-gray-600 hover:text-black hover:bg-gray-100'
+                }`}
               >
                 <FiX className="w-5 h-5" />
               </button>
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmit} className="p-6 space-y-6">
+            <form onSubmit={handleSubmit} className="p-5 space-y-4">
               {formError && (
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
@@ -291,14 +309,20 @@ export function AddSubscriptionModal({
               )}
 
               {/* Section 1: Basic Info */}
-              <div className="space-y-5">
-                <div className="px-3 pb-3 border-b border-[#1A1A1A]">
-                  <h3 className="text-[#999999] text-xs font-bold uppercase tracking-widest">Basic Information</h3>
+              <div className="space-y-3">
+                <div className={`px-3 pb-3 border-b ${
+                  isDark ? 'border-[#1A1A1A]' : 'border-gray-300'
+                }`}>
+                  <h3 className={`text-xs font-bold uppercase tracking-widest ${
+                    isDark ? 'text-[#999999]' : 'text-gray-600'
+                  }`}>Basic Information</h3>
                 </div>
 
                 {/* Name with autocomplete */}
                 <div className="relative">
-                  <label className="block text-[#CCCCCC] text-sm font-medium mb-3">
+                  <label className={`block text-xs font-medium mb-2 ${
+                    isDark ? 'text-[#CCCCCC]' : 'text-gray-800'
+                  }`}>
                     Subscription Name <span className="text-red-400">*</span>
                   </label>
                   <input
@@ -312,13 +336,21 @@ export function AddSubscriptionModal({
                     onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                     placeholder="e.g., Netflix, Spotify"
                     required
-                    className="w-full bg-[#0D0D0D] border border-[#1F1F1F] text-white rounded-xl px-4 py-3.5 text-sm placeholder:text-[#444444] focus:border-[#444444] focus:outline-none focus:ring-1 focus:ring-[#333333] transition-all"
+                    className={`w-full rounded-lg px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-1 ${
+                      isDark
+                        ? 'bg-[#0D0D0D] border border-[#1F1F1F] text-white placeholder:text-[#444444] focus:border-[#444444] focus:ring-[#333333]'
+                        : 'bg-gray-100 border border-gray-300 text-black placeholder:text-gray-500 focus:border-gray-500 focus:ring-gray-400'
+                    }`}
                   />
                   {showSuggestions && filteredSuggestions.length > 0 && (
                     <motion.div
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="absolute top-full left-0 right-0 mt-2 bg-[#111111] border border-[#1A1A1A] rounded-xl overflow-hidden z-20 shadow-2xl backdrop-blur-sm"
+                      className={`absolute top-full left-0 right-0 mt-2 rounded-xl overflow-hidden z-20 shadow-2xl backdrop-blur-sm border ${
+                        isDark
+                          ? 'bg-[#111111] border-[#1A1A1A]'
+                          : 'bg-gray-50 border-gray-300'
+                      }`}
                     >
                       {filteredSuggestions.slice(0, 6).map((suggestion) => {
                         const SuggIcon = getSubscriptionIcon(suggestion)
@@ -331,11 +363,19 @@ export function AddSubscriptionModal({
                               setCategory(getAutoCategory(suggestion))
                               setShowSuggestions(false)
                             }}
-                            className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[#1A1A1A] transition-colors border-b border-[#0D0D0D] last:border-b-0"
+                            className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors border-b ${
+                              isDark
+                                ? 'hover:bg-[#1A1A1A] border-[#0D0D0D]'
+                                : 'hover:bg-gray-200 border-gray-200'
+                            } last:border-b-0`}
                           >
-                            <SuggIcon className="w-4 h-4 text-[#666666]" />
-                            <span className="text-white text-sm flex-1">{suggestion}</span>
-                            <span className="text-[#555555] text-xs bg-[#0D0D0D] px-2.5 py-1 rounded-full">{getAutoCategory(suggestion)}</span>
+                            <SuggIcon className={`w-4 h-4 ${isDark ? 'text-[#666666]' : 'text-gray-600'}`} />
+                            <span className={`text-sm flex-1 ${isDark ? 'text-white' : 'text-black'}`}>{suggestion}</span>
+                            <span className={`text-xs px-2.5 py-1 rounded-full ${
+                              isDark
+                                ? 'text-[#555555] bg-[#0D0D0D]'
+                                : 'text-gray-700 bg-gray-300'
+                            }`}>{getAutoCategory(suggestion)}</span>
                           </button>
                         )
                       })}
@@ -344,20 +384,24 @@ export function AddSubscriptionModal({
                 </div>
 
                 {/* Category and Cost */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[#CCCCCC] text-sm font-medium mb-3">
+                    <label className={`block text-xs font-medium mb-2 ${isDark ? 'text-[#CCCCCC]' : 'text-gray-800'}`}>
                       Category <span className="text-red-400">*</span>
                     </label>
                     <select
                       value={category}
                       onChange={(e) => setCategory(e.target.value)}
-                      className="w-full bg-[#0D0D0D] border border-[#1F1F1F] text-white rounded-xl px-4 py-3.5 text-sm focus:border-[#444444] focus:outline-none focus:ring-1 focus:ring-[#333333] transition-all appearance-none"
+                      className={`w-full rounded-lg px-3 py-2.5 text-sm transition-all appearance-none focus:outline-none focus:ring-1 ${
+                        isDark
+                          ? 'bg-[#0D0D0D] border border-[#1F1F1F] text-white focus:border-[#444444] focus:ring-[#333333]'
+                          : 'bg-gray-100 border border-gray-300 text-black focus:border-gray-500 focus:ring-gray-400'
+                      }`}
                       style={{
-                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666666' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='${isDark ? '%23666666' : '%23999999'}' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
                         backgroundRepeat: 'no-repeat',
-                        backgroundPosition: 'right 1rem center',
-                        paddingRight: '2.5rem',
+                        backgroundPosition: 'right 0.75rem center',
+                        paddingRight: '2rem',
                       }}
                     >
                       {categories.map((cat) => (
@@ -368,11 +412,11 @@ export function AddSubscriptionModal({
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[#CCCCCC] text-sm font-medium mb-3">
+                    <label className={`block text-xs font-medium mb-2 ${isDark ? 'text-[#CCCCCC]' : 'text-gray-800'}`}>
                       Cost <span className="text-red-400">*</span>
                     </label>
                     <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#555555] text-sm font-medium">$</span>
+                      <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium ${isDark ? 'text-[#555555]' : 'text-gray-600'}`}>$</span>
                       <input
                         type="number"
                         value={cost}
@@ -381,7 +425,11 @@ export function AddSubscriptionModal({
                         required
                         min="0"
                         step="0.01"
-                        className="w-full bg-[#0D0D0D] border border-[#1F1F1F] text-white rounded-xl pl-8 pr-4 py-3.5 text-sm placeholder:text-[#444444] focus:border-[#444444] focus:outline-none focus:ring-1 focus:ring-[#333333] transition-all"
+                        className={`w-full rounded-lg pl-7 pr-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-1 ${
+                          isDark
+                            ? 'bg-[#0D0D0D] border border-[#1F1F1F] text-white placeholder:text-[#444444] focus:border-[#444444] focus:ring-[#333333]'
+                            : 'bg-gray-100 border border-gray-300 text-black placeholder:text-gray-500 focus:border-gray-500 focus:ring-gray-400'
+                        }`}
                       />
                     </div>
                   </div>
@@ -389,25 +437,33 @@ export function AddSubscriptionModal({
               </div>
 
               {/* Section 2: Billing Details */}
-              <div className="space-y-5">
-                <div className="px-3 pb-3 border-b border-[#1A1A1A]">
-                  <h3 className="text-[#999999] text-xs font-bold uppercase tracking-widest">Billing Details</h3>
+              <div className="space-y-3">
+                <div className={`px-3 pb-3 border-b ${
+                  isDark ? 'border-[#1A1A1A]' : 'border-gray-300'
+                }`}>
+                  <h3 className={`text-xs font-bold uppercase tracking-widest ${
+                    isDark ? 'text-[#999999]' : 'text-gray-600'
+                  }`}>Billing Details</h3>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[#CCCCCC] text-sm font-medium mb-3">
+                    <label className={`block text-xs font-medium mb-2 ${isDark ? 'text-[#CCCCCC]' : 'text-gray-800'}`}>
                       Billing Cycle <span className="text-red-400">*</span>
                     </label>
                     <select
                       value={billingCycle}
                       onChange={(e) => setBillingCycle(e.target.value as BillingCycle)}
-                      className="w-full bg-[#0D0D0D] border border-[#1F1F1F] text-white rounded-xl px-4 py-3.5 text-sm focus:border-[#444444] focus:outline-none focus:ring-1 focus:ring-[#333333] transition-all appearance-none"
+                      className={`w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-1 transition-all appearance-none ${
+                        isDark
+                          ? 'bg-[#0D0D0D] border border-[#1F1F1F] text-white focus:border-[#444444] focus:ring-[#333333]'
+                          : 'bg-gray-100 border border-gray-300 text-black focus:border-gray-500 focus:ring-gray-400'
+                      }`}
                       style={{
-                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666666' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='${isDark ? '%23666666' : '%23999999'}' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
                         backgroundRepeat: 'no-repeat',
-                        backgroundPosition: 'right 1rem center',
-                        paddingRight: '2.5rem',
+                        backgroundPosition: 'right 0.75rem center',
+                        paddingRight: '2rem',
                       }}
                     >
                       <option value="monthly">Monthly</option>
@@ -415,18 +471,22 @@ export function AddSubscriptionModal({
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[#CCCCCC] text-sm font-medium mb-3">
+                    <label className={`block text-xs font-medium mb-2 ${isDark ? 'text-[#CCCCCC]' : 'text-gray-800'}`}>
                       Status <span className="text-red-400">*</span>
                     </label>
                     <select
                       value={status}
                       onChange={(e) => setStatus(e.target.value as SubscriptionStatus)}
-                      className="w-full bg-[#0D0D0D] border border-[#1F1F1F] text-white rounded-xl px-4 py-3.5 text-sm focus:border-[#444444] focus:outline-none focus:ring-1 focus:ring-[#333333] transition-all appearance-none"
+                      className={`w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-1 transition-all appearance-none ${
+                        isDark
+                          ? 'bg-[#0D0D0D] border border-[#1F1F1F] text-white focus:border-[#444444] focus:ring-[#333333]'
+                          : 'bg-gray-100 border border-gray-300 text-black focus:border-gray-500 focus:ring-gray-400'
+                      }`}
                       style={{
-                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666666' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='${isDark ? '%23666666' : '%23999999'}' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
                         backgroundRepeat: 'no-repeat',
-                        backgroundPosition: 'right 1rem center',
-                        paddingRight: '2.5rem',
+                        backgroundPosition: 'right 0.75rem center',
+                        paddingRight: '2rem',
                       }}
                     >
                       <option value="active">Active</option>
@@ -437,9 +497,9 @@ export function AddSubscriptionModal({
                 </div>
 
                 {/* Renewal Date and Trial End Date */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[#CCCCCC] text-sm font-medium mb-3">
+                    <label className={`block text-xs font-medium mb-2 ${isDark ? 'text-[#CCCCCC]' : 'text-gray-800'}`}>
                       Renewal Date <span className="text-red-400">*</span>
                     </label>
                     <input
@@ -447,7 +507,11 @@ export function AddSubscriptionModal({
                       value={renewalDate}
                       onChange={(e) => setRenewalDate(e.target.value)}
                       required
-                      className="w-full bg-[#0D0D0D] border border-[#1F1F1F] text-white rounded-xl px-4 py-3.5 text-sm focus:border-[#444444] focus:outline-none focus:ring-1 focus:ring-[#333333] transition-all [color-scheme:dark]"
+                      className={`w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-1 transition-all ${
+                        isDark
+                          ? 'bg-[#0D0D0D] border border-[#1F1F1F] text-white focus:border-[#444444] focus:ring-[#333333] [color-scheme:dark]'
+                          : 'bg-gray-100 border border-gray-300 text-black focus:border-gray-500 focus:ring-gray-400 [color-scheme:light]'
+                      }`}
                     />
                   </div>
                   {status === 'trial' && (
@@ -455,14 +519,18 @@ export function AddSubscriptionModal({
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                     >
-                      <label className="block text-[#CCCCCC] text-sm font-medium mb-3">
+                      <label className={`block text-xs font-medium mb-2 ${isDark ? 'text-[#CCCCCC]' : 'text-gray-800'}`}>
                         Trial End Date
                       </label>
                       <input
                         type="date"
                         value={trialEndDate}
                         onChange={(e) => setTrialEndDate(e.target.value)}
-                        className="w-full bg-[#0D0D0D] border border-[#1F1F1F] text-white rounded-xl px-4 py-3.5 text-sm focus:border-[#444444] focus:outline-none focus:ring-1 focus:ring-[#333333] transition-all [color-scheme:dark]"
+                        className={`w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-1 transition-all ${
+                          isDark
+                            ? 'bg-[#0D0D0D] border border-[#1F1F1F] text-white focus:border-[#444444] focus:ring-[#333333] [color-scheme:dark]'
+                            : 'bg-gray-100 border border-gray-300 text-black focus:border-gray-500 focus:ring-gray-400 [color-scheme:light]'
+                        }`}
                       />
                     </motion.div>
                   )}
@@ -470,15 +538,19 @@ export function AddSubscriptionModal({
               </div>
 
               {/* Section 3: Cancellation & Notes */}
-              <div className="space-y-5">
-                <div className="px-3 pb-3 border-b border-[#1A1A1A]">
-                  <h3 className="text-[#999999] text-xs font-bold uppercase tracking-widest">Additional Details</h3>
+              <div className="space-y-3">
+                <div className={`px-3 pb-3 border-b ${
+                  isDark ? 'border-[#1A1A1A]' : 'border-gray-300'
+                }`}>
+                  <h3 className={`text-xs font-bold uppercase tracking-widest ${
+                    isDark ? 'text-[#999999]' : 'text-gray-600'
+                  }`}>Additional Details</h3>
                 </div>
 
                 {/* Cancellation */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[#CCCCCC] text-sm font-medium mb-3">
+                    <label className={`block text-xs font-medium mb-2 ${isDark ? 'text-[#CCCCCC]' : 'text-gray-800'}`}>
                       Cancellation Difficulty
                     </label>
                     <select
@@ -486,12 +558,16 @@ export function AddSubscriptionModal({
                       onChange={(e) =>
                         setCancellationDifficulty(e.target.value as CancellationDifficulty)
                       }
-                      className="w-full bg-[#0D0D0D] border border-[#1F1F1F] text-white rounded-xl px-4 py-3.5 text-sm focus:border-[#444444] focus:outline-none focus:ring-1 focus:ring-[#333333] transition-all appearance-none"
+                      className={`w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-1 transition-all appearance-none ${
+                        isDark
+                          ? 'bg-[#0D0D0D] border border-[#1F1F1F] text-white focus:border-[#444444] focus:ring-[#333333]'
+                          : 'bg-gray-100 border border-gray-300 text-black focus:border-gray-500 focus:ring-gray-400'
+                      }`}
                       style={{
-                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666666' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='${isDark ? '%23666666' : '%23999999'}' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
                         backgroundRepeat: 'no-repeat',
-                        backgroundPosition: 'right 1rem center',
-                        paddingRight: '2.5rem',
+                        backgroundPosition: 'right 0.75rem center',
+                        paddingRight: '2rem',
                       }}
                     >
                       <option value="easy">Easy</option>
@@ -500,7 +576,7 @@ export function AddSubscriptionModal({
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[#CCCCCC] text-sm font-medium mb-3">
+                    <label className={`block text-xs font-medium mb-2 ${isDark ? 'text-[#CCCCCC]' : 'text-gray-800'}`}>
                       Cancellation Link
                     </label>
                     <input
@@ -508,28 +584,38 @@ export function AddSubscriptionModal({
                       value={cancellationLink}
                       onChange={(e) => setCancellationLink(e.target.value)}
                       placeholder="https://..."
-                      className="w-full bg-[#0D0D0D] border border-[#1F1F1F] text-white rounded-xl px-4 py-3.5 text-sm placeholder:text-[#444444] focus:border-[#444444] focus:outline-none focus:ring-1 focus:ring-[#333333] transition-all"
+                      className={`w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-1 transition-all ${
+                        isDark
+                          ? 'bg-[#0D0D0D] border border-[#1F1F1F] text-white placeholder:text-[#444444] focus:border-[#444444] focus:ring-[#333333]'
+                          : 'bg-gray-100 border border-gray-300 text-black placeholder:text-gray-500 focus:border-gray-500 focus:ring-gray-400'
+                      }`}
                     />
                   </div>
                 </div>
 
                 {/* Notes */}
                 <div>
-                  <label className="block text-[#CCCCCC] text-sm font-medium mb-3">
+                  <label className={`block text-xs font-medium mb-2 ${isDark ? 'text-[#CCCCCC]' : 'text-gray-800'}`}>
                     Notes
                   </label>
                   <textarea
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     placeholder="Add any additional notes about this subscription..."
-                    rows={3}
-                    className="w-full bg-[#0D0D0D] border border-[#1F1F1F] text-white rounded-xl px-4 py-3.5 text-sm placeholder:text-[#444444] focus:border-[#444444] focus:outline-none focus:ring-1 focus:ring-[#333333] transition-all resize-none"
+                    rows={2}
+                    className={`w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-1 transition-all resize-none ${
+                      isDark
+                        ? 'bg-[#0D0D0D] border border-[#1F1F1F] text-white placeholder:text-[#444444] focus:border-[#444444] focus:ring-[#333333]'
+                        : 'bg-gray-100 border border-gray-300 text-black placeholder:text-gray-500 focus:border-gray-500 focus:ring-gray-400'
+                    }`}
                   />
                 </div>
               </div>
 
               {/* Actions */}
-              <div className="flex items-center justify-between pt-4 border-t border-[#1A1A1A]">
+              <div className={`flex items-center justify-between pt-3 border-t ${
+                isDark ? 'border-[#1A1A1A]' : 'border-gray-300'
+              }`}>
                 {isEditing ? (
                   <div>
                     {showDeleteConfirm ? (
@@ -538,19 +624,23 @@ export function AddSubscriptionModal({
                         animate={{ opacity: 1, scale: 1 }}
                         className="flex items-center gap-2"
                       >
-                        <span className="text-[#666666] text-xs font-medium">Delete this subscription?</span>
+                        <span className={`text-xs font-medium ${isDark ? 'text-[#666666]' : 'text-gray-600'}`}>Delete this subscription?</span>
                         <button
                           type="button"
                           onClick={handleDelete}
                           disabled={deleting}
-                          className="text-white text-xs px-4 py-2 bg-red-500/20 border border-red-500/50 rounded-lg hover:bg-red-500/30 transition-all disabled:opacity-50"
+                          className="text-xs px-3 py-1.5 bg-red-500/20 border border-red-500/50 rounded-lg hover:bg-red-500/30 transition-all disabled:opacity-50 text-red-500"
                         >
                           {deleting ? 'Deleting...' : 'Delete'}
                         </button>
                         <button
                           type="button"
                           onClick={() => setShowDeleteConfirm(false)}
-                          className="text-[#555555] text-xs px-4 py-2 border border-[#1A1A1A] rounded-lg hover:border-[#333333] hover:text-white transition-all"
+                          className={`text-xs px-3 py-1.5 rounded-lg transition-all ${
+                            isDark
+                              ? 'text-[#555555] border border-[#1A1A1A] hover:border-[#333333] hover:text-white'
+                              : 'text-gray-600 border border-gray-300 hover:border-gray-400 hover:text-black'
+                          }`}
                         >
                           Cancel
                         </button>
@@ -559,7 +649,11 @@ export function AddSubscriptionModal({
                       <button
                         type="button"
                         onClick={() => setShowDeleteConfirm(true)}
-                        className="text-[#555555] text-xs hover:text-red-400 transition-colors font-medium"
+                        className={`text-xs font-medium transition-colors ${
+                          isDark
+                            ? 'text-[#555555] hover:text-red-400'
+                            : 'text-gray-600 hover:text-red-500'
+                        }`}
                       >
                         Delete subscription
                       </button>
@@ -573,14 +667,22 @@ export function AddSubscriptionModal({
                   <button
                     type="button"
                     onClick={onClose}
-                    className="text-[#CCCCCC] text-sm font-medium px-6 py-2.5 border border-[#1A1A1A] rounded-xl hover:border-[#333333] hover:bg-[#0D0D0D] transition-all duration-200"
+                    className={`text-xs font-medium px-4 py-2 rounded-lg transition-all duration-200 border ${
+                      isDark
+                        ? 'text-[#CCCCCC] border-[#1A1A1A] hover:border-[#333333] hover:bg-[#0D0D0D]'
+                        : 'text-gray-800 border-gray-300 hover:border-gray-400 hover:bg-gray-100'
+                    }`}
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={loading}
-                    className="bg-white text-black text-sm font-semibold px-6 py-2.5 rounded-xl hover:bg-gray-100 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg"
+                    className={`text-xs font-semibold px-4 py-2 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg ${
+                      isDark
+                        ? 'bg-white text-black hover:bg-gray-100'
+                        : 'bg-black text-white hover:bg-gray-900'
+                    }`}
                   >
                     {loading ? (
                       <>
