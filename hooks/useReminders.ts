@@ -30,7 +30,15 @@ export function useReminders() {
       .order('reminder_date', { ascending: true })
 
     if (!error && data) {
-      setReminders(data as Reminder[])
+      // Check if in-app reminders are enabled
+      const { data: prefs } = await supabase
+        .from('user_preferences')
+        .select('in_app_reminders')
+        .eq('user_id', user.id)
+        .single()
+
+      const inAppEnabled = prefs?.in_app_reminders ?? true
+      setReminders(inAppEnabled ? (data as Reminder[]) : [])
     }
     setLoading(false)
   }, [])
@@ -38,21 +46,34 @@ export function useReminders() {
   useEffect(() => {
     fetchReminders()
 
-    // Real-time listener
+    // Real-time listener filtered by user_id
     const supabase = supabaseRef.current
-    const channel = supabase
-      .channel('reminders-changes')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'reminders' },
-        () => {
-          fetchReminders()
-        }
-      )
-      .subscribe()
+    const setupChannel = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return null
+
+      return supabase
+        .channel(`reminders-changes-${user.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'reminders',
+            filter: `user_id=eq.${user.id}`,
+          },
+          () => {
+            fetchReminders()
+          }
+        )
+        .subscribe()
+    }
+
+    let channel: ReturnType<typeof supabase.channel> | null = null
+    setupChannel().then((ch) => { channel = ch })
 
     return () => {
-      supabase.removeChannel(channel)
+      if (channel) supabase.removeChannel(channel)
     }
   }, [fetchReminders])
 

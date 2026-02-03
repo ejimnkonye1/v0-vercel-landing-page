@@ -51,3 +51,16 @@ export interface UserProfile {
   id: string
   email: string
 }
+
+export type ReminderDaysBefore = 2 | 3 | 5 | 7
+
+export interface UserPreferences {
+  id: string
+  user_id: string
+  email_reminders_renewal: boolean
+  email_reminders_trial: boolean
+  in_app_reminders: boolean
+  reminder_days_before: ReminderDaysBefore
+  created_at: string
+  updated_at: string
+}

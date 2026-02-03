@@ -38,10 +38,10 @@ export function StarfieldBackground() {
       stars.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        vx: (Math.random() - 0.5) * 0.1,
-        vy: (Math.random() - 0.5) * 0.1,
-        opacity: Math.random() * 0.4 + 0.2,
-        size: Math.random() * 0.75 + 0.5,
+        vx: (Math.random() - 0.5) * 0.2,
+        vy: (Math.random() - 0.5) * 0.2,
+        opacity: Math.random() * 0.5 + 0.3,
+        size: Math.random() * 1 + 0.5,
       })
     }
 
@@ -49,13 +49,13 @@ export function StarfieldBackground() {
     let animationId: number
 
     const animate = () => {
-      // Clear canvas with semi-transparent black for trail effect
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.02)'
+      // Clear canvas with black background
+      ctx.fillStyle = '#000000'
       ctx.fillRect(0, 0, canvas.width, canvas.height)
 
       // Update and draw stars
       stars.forEach((star) => {
-        // Update position
+        // Update position with smooth movement
         star.x += star.vx
         star.y += star.vy
 
@@ -65,7 +65,7 @@ export function StarfieldBackground() {
         if (star.y < 0) star.y = canvas.height
         if (star.y > canvas.height) star.y = 0
 
-        // Draw tiny star as simple dot
+        // Draw star with white color
         ctx.fillStyle = `rgba(255, 255, 255, ${star.opacity})`
         ctx.beginPath()
         ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2)
@@ -86,7 +86,7 @@ export function StarfieldBackground() {
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 -z-10 bg-black"
+      className="fixed inset-0 -z-10"
     />
   )
 }

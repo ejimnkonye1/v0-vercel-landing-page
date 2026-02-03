@@ -32,10 +32,11 @@ export function SpendingChart({ subscriptions }: SpendingChartProps) {
           const created = new Date(s.created_at)
           // Subscription must have been created before end of this month
           if (created > monthEnd) return false
-          // If cancelled, check if it was cancelled after this month started
+          // If cancelled, it was still active before its updated_at date
           if (s.status === 'cancelled') {
-            const updated = new Date(s.updated_at)
-            if (updated < monthStart) return false
+            const cancelledAt = new Date(s.updated_at)
+            // If cancelled before this month started, it wasn't active this month
+            if (cancelledAt < monthStart) return false
           }
           return true
         })

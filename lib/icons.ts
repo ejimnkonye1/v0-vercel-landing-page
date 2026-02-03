@@ -6,6 +6,9 @@ import {
   SiDropbox, SiNotion, SiSlack,
   SiGithub, SiLinear, SiFigma,
   SiOpenai, SiTwitch, SiDiscord,
+  SiX, SiTelegram, SiInstagram,
+  SiTiktok, SiWhatsapp, SiLinkedin,
+  SiMastodon, SiBluesky, SiThreads, SiReddit,
 } from 'react-icons/si'
 import { FiDollarSign, FiTv, FiMonitor, FiPlay } from 'react-icons/fi'
 import type { IconType } from 'react-icons'
@@ -61,6 +64,20 @@ export const iconMap: Record<string, IconType> = {
   twitch: SiTwitch,
   discord: SiDiscord,
   'discord nitro': SiDiscord,
+  // Social Media
+  x: SiX,
+  twitter: SiX,
+  telegram: SiTelegram,
+  instagram: SiInstagram,
+  tiktok: SiTiktok,
+  'tik tok': SiTiktok,
+  whatsapp: SiWhatsapp,
+  'whats app': SiWhatsapp,
+  linkedin: SiLinkedin,
+  mastodon: SiMastodon,
+  bluesky: SiBluesky,
+  threads: SiThreads,
+  reddit: SiReddit,
 }
 
 export function getSubscriptionIcon(name: string): IconType {

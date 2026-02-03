@@ -23,13 +23,21 @@ export function SpendingLineChart({ subscriptions }: SpendingLineChartProps) {
     const now = new Date()
 
     for (let i = 11; i >= 0; i--) {
-      const date = new Date(now.getFullYear(), now.getMonth() - i, 1)
-      const monthName = date.toLocaleDateString('en-US', { month: 'short' })
+      const monthStart = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0)
+      const monthName = monthStart.toLocaleDateString('en-US', { month: 'short' })
 
       const monthlySpend = subscriptions
         .filter((s) => {
           const created = new Date(s.created_at)
-          return created <= date && s.status !== 'cancelled'
+          // Must have been created before end of this month
+          if (created > monthEnd) return false
+          // If cancelled, check if it was still active during this month
+          if (s.status === 'cancelled') {
+            const cancelledAt = new Date(s.updated_at)
+            if (cancelledAt < monthStart) return false
+          }
+          return true
         })
         .reduce((sum, s) => {
           const monthly = s.billing_cycle === 'yearly' ? s.cost / 12 : s.cost

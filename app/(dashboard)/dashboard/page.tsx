@@ -38,6 +38,8 @@ export default function DashboardPage() {
     const { error } = await deleteSubscription(id)
     if (error) {
       setDeleteError(typeof error === 'object' && 'message' in error ? error.message : 'Failed to delete')
+    } else {
+      refetch()
     }
   }
 
@@ -109,7 +111,7 @@ export default function DashboardPage() {
           setEditingSub(null)
           setModalOpen(true)
         }}
-        className="fixed bottom-8 right-8 w-14 h-14 bg-white text-black rounded-full shadow-2xl flex items-center justify-center hover:bg-gray-100 hover:scale-105 active:scale-95 transition-all duration-200 z-30"
+        className="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 w-14 h-14 bg-white text-black rounded-full shadow-2xl flex items-center justify-center hover:bg-gray-100 hover:scale-105 active:scale-95 transition-all duration-200 z-30"
       >
         <FiPlus className="w-6 h-6" />
       </motion.button>

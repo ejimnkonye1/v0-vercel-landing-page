@@ -1,5 +1,5 @@
 import { createClient } from './client'
-import type { Subscription, SubscriptionFormData, Reminder } from '@/lib/types'
+import type { Subscription, SubscriptionFormData, Reminder, UserPreferences } from '@/lib/types'
 
 async function getCurrentUserId() {
   const supabase = createClient()
@@ -54,10 +54,18 @@ export async function createSubscription(formData: SubscriptionFormData) {
     .single()
 
   if (!error && data) {
-    // Auto-create reminder 2 days before renewal
+    // Get user's preferred reminder advance days
+    const { data: prefs } = await supabase
+      .from('user_preferences')
+      .select('reminder_days_before')
+      .eq('user_id', userId)
+      .single()
+    const daysBefore = prefs?.reminder_days_before ?? 2
+
+    // Auto-create reminder before renewal
     const renewalDate = new Date(formData.renewal_date)
     const reminderDate = new Date(renewalDate)
-    reminderDate.setDate(reminderDate.getDate() - 2)
+    reminderDate.setDate(reminderDate.getDate() - daysBefore)
 
     if (reminderDate > new Date()) {
       await supabase.from('reminders').insert({
@@ -73,7 +81,7 @@ export async function createSubscription(formData: SubscriptionFormData) {
     if (formData.status === 'trial' && formData.trial_end_date) {
       const trialEnd = new Date(formData.trial_end_date)
       const trialReminder = new Date(trialEnd)
-      trialReminder.setDate(trialReminder.getDate() - 2)
+      trialReminder.setDate(trialReminder.getDate() - daysBefore)
 
       if (trialReminder > new Date()) {
         await supabase.from('reminders').insert({
@@ -115,10 +123,18 @@ export async function updateSubscription(id: string, formData: Partial<Subscript
       .eq('reminder_type', 'renewal')
       .eq('is_sent', false)
 
+    // Get user's preferred reminder advance days
+    const { data: prefs } = await supabase
+      .from('user_preferences')
+      .select('reminder_days_before')
+      .eq('user_id', userId)
+      .single()
+    const daysBefore = prefs?.reminder_days_before ?? 2
+
     // Create new renewal reminder
     const renewalDate = new Date(formData.renewal_date)
     const reminderDate = new Date(renewalDate)
-    reminderDate.setDate(reminderDate.getDate() - 2)
+    reminderDate.setDate(reminderDate.getDate() - daysBefore)
 
     if (reminderDate > new Date()) {
       await supabase.from('reminders').insert({
@@ -268,4 +284,119 @@ export async function getSpendingByCategory() {
   }))
 
   return { data: result, error: null }
+}
+
+// ─── User Preferences ────────────────────────────────────────────
+
+export async function getUserPreferences() {
+  const supabase = createClient()
+  const userId = await getCurrentUserId()
+  if (!userId) return { data: null, error: { message: 'Not authenticated' } }
+
+  const { data, error } = await supabase
+    .from('user_preferences')
+    .select('*')
+    .eq('user_id', userId)
+    .single()
+
+  // Row not found is not an error - user just hasn't customized yet
+  if (error?.code === 'PGRST116') {
+    return { data: null, error: null }
+  }
+
+  return { data: data as UserPreferences | null, error }
+}
+
+export async function upsertUserPreferences(
+  prefs: Partial<Omit<UserPreferences, 'id' | 'user_id' | 'created_at' | 'updated_at'>>
+) {
+  const supabase = createClient()
+  const userId = await getCurrentUserId()
+  if (!userId) return { data: null, error: { message: 'Not authenticated' } }
+
+  const { data, error } = await supabase
+    .from('user_preferences')
+    .upsert(
+      {
+        user_id: userId,
+        ...prefs,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'user_id' }
+    )
+    .select()
+    .single()
+
+  return { data: data as UserPreferences | null, error }
+}
+
+// ─── Renewal Advancement ─────────────────────────────────────────
+
+export async function advanceOverdueSubscriptions() {
+  const supabase = createClient()
+  const userId = await getCurrentUserId()
+  if (!userId) return { advanced: 0, error: { message: 'Not authenticated' } }
+
+  const now = new Date()
+
+  const { data: overdue, error: fetchError } = await supabase
+    .from('subscriptions')
+    .select('*')
+    .eq('user_id', userId)
+    .in('status', ['active', 'trial'])
+    .lt('renewal_date', now.toISOString())
+
+  if (fetchError || !overdue || overdue.length === 0) {
+    return { advanced: 0, error: fetchError }
+  }
+
+  // Get user's preferred reminder advance days
+  const { data: prefs } = await supabase
+    .from('user_preferences')
+    .select('reminder_days_before')
+    .eq('user_id', userId)
+    .single()
+  const daysBefore = prefs?.reminder_days_before ?? 2
+
+  let advancedCount = 0
+  for (const sub of overdue) {
+    let newDate = new Date(sub.renewal_date)
+    while (newDate < now) {
+      if (sub.billing_cycle === 'yearly') {
+        newDate.setFullYear(newDate.getFullYear() + 1)
+      } else {
+        newDate.setMonth(newDate.getMonth() + 1)
+      }
+    }
+
+    await supabase
+      .from('subscriptions')
+      .update({ renewal_date: newDate.toISOString(), updated_at: now.toISOString() })
+      .eq('id', sub.id)
+      .eq('user_id', userId)
+
+    // Delete old unsent reminders
+    await supabase
+      .from('reminders')
+      .delete()
+      .eq('subscription_id', sub.id)
+      .eq('is_sent', false)
+
+    // Create new reminder
+    const reminderDate = new Date(newDate)
+    reminderDate.setDate(reminderDate.getDate() - daysBefore)
+    if (reminderDate > now) {
+      await supabase.from('reminders').insert({
+        user_id: userId,
+        subscription_id: sub.id,
+        reminder_type: 'renewal',
+        reminder_date: reminderDate.toISOString(),
+        is_sent: false,
+      })
+    }
+
+    advancedCount++
+  }
+
+  return { advanced: advancedCount, error: null }
 }

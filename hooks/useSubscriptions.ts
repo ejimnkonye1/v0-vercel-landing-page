@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { advanceOverdueSubscriptions } from '@/lib/supabase/queries'
 import type { Subscription } from '@/lib/types'
 
 export function useSubscriptions() {
@@ -9,14 +10,21 @@ export function useSubscriptions() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const supabaseRef = useRef(createClient())
+  const userIdRef = useRef<string | null>(null)
+  const advancingRef = useRef(false)
 
   const fetchSubscriptions = useCallback(async () => {
+    // Skip re-fetch if we're currently advancing renewal dates
+    if (advancingRef.current) return
+
     const supabase = supabaseRef.current
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
       setLoading(false)
       return
     }
+
+    userIdRef.current = user.id
 
     const { data, error } = await supabase
       .from('subscriptions')
@@ -27,7 +35,31 @@ export function useSubscriptions() {
     if (error) {
       setError(error.message)
     } else {
-      setSubscriptions(data as Subscription[])
+      const subs = data as Subscription[]
+
+      // Check for overdue subscriptions and auto-advance
+      const hasOverdue = subs.some(
+        (s) =>
+          (s.status === 'active' || s.status === 'trial') &&
+          new Date(s.renewal_date) < new Date()
+      )
+
+      if (hasOverdue && !advancingRef.current) {
+        advancingRef.current = true
+        await advanceOverdueSubscriptions()
+        advancingRef.current = false
+        // Re-fetch with updated data
+        const { data: freshData } = await supabase
+          .from('subscriptions')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+        if (freshData) {
+          setSubscriptions(freshData as Subscription[])
+        }
+      } else {
+        setSubscriptions(subs)
+      }
       setError(null)
     }
     setLoading(false)
@@ -36,21 +68,34 @@ export function useSubscriptions() {
   useEffect(() => {
     fetchSubscriptions()
 
-    // Real-time listener
+    // Real-time listener filtered by user_id
     const supabase = supabaseRef.current
-    const channel = supabase
-      .channel('subscriptions-changes')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'subscriptions' },
-        () => {
-          fetchSubscriptions()
-        }
-      )
-      .subscribe()
+    const setupChannel = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return null
+
+      return supabase
+        .channel(`subscriptions-changes-${user.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'subscriptions',
+            filter: `user_id=eq.${user.id}`,
+          },
+          () => {
+            fetchSubscriptions()
+          }
+        )
+        .subscribe()
+    }
+
+    let channel: ReturnType<typeof supabase.channel> | null = null
+    setupChannel().then((ch) => { channel = ch })
 
     return () => {
-      supabase.removeChannel(channel)
+      if (channel) supabase.removeChannel(channel)
     }
   }, [fetchSubscriptions])
 

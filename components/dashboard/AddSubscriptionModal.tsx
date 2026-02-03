@@ -19,9 +19,80 @@ const suggestions = [
   'Amazon Prime', 'HBO Max', 'Hulu', 'Adobe Creative Cloud', 'Microsoft 365',
   'Google One', 'Notion', 'Slack', 'GitHub', 'Figma', 'Linear',
   'ChatGPT Plus', 'Dropbox', 'Discord Nitro', 'Twitch',
+  'X', 'Instagram', 'TikTok', 'Telegram', 'LinkedIn',
+  'Threads', 'Bluesky', 'Mastodon', 'Reddit', 'WhatsApp',
 ]
 
-const categories = ['Entertainment', 'Productivity', 'Fitness', 'Developer Tools', 'Storage', 'Other']
+const categories = ['Entertainment', 'Productivity', 'Fitness', 'Developer Tools', 'Storage', 'Social Media', 'Other']
+
+// Auto-categorization mapping for popular apps
+const appCategoryMap: Record<string, string> = {
+  // Entertainment
+  'netflix': 'Entertainment',
+  'spotify': 'Entertainment',
+  'youtube premium': 'Entertainment',
+  'youtube music': 'Entertainment',
+  'disney+': 'Entertainment',
+  'hbo max': 'Entertainment',
+  'hulu': 'Entertainment',
+  'apple tv+': 'Entertainment',
+  'apple tv': 'Entertainment',
+  'apple music': 'Entertainment',
+  'amazon prime': 'Entertainment',
+  'prime video': 'Entertainment',
+  'twitch': 'Entertainment',
+  'playstation plus': 'Entertainment',
+  'ps plus': 'Entertainment',
+  'xbox game pass': 'Entertainment',
+  'game pass': 'Entertainment',
+  'nintendo switch online': 'Entertainment',
+  // Productivity
+  'microsoft 365': 'Productivity',
+  'google workspace': 'Productivity',
+  'google one': 'Productivity',
+  'notion': 'Productivity',
+  'slack': 'Productivity',
+  'dropbox': 'Storage',
+  // Developer Tools
+  'github': 'Developer Tools',
+  'github copilot': 'Developer Tools',
+  'linear': 'Developer Tools',
+  'figma': 'Developer Tools',
+  'chatgpt plus': 'Developer Tools',
+  'openai': 'Developer Tools',
+  // Design/Creative
+  'adobe creative cloud': 'Productivity',
+  'photoshop': 'Productivity',
+  // Storage
+  'icloud+': 'Storage',
+  'icloud': 'Storage',
+  'google drive': 'Storage',
+  // Gaming
+  'playstation': 'Entertainment',
+  'xbox': 'Entertainment',
+  'nintendo': 'Entertainment',
+  // Social/Communication
+  'discord nitro': 'Entertainment',
+  'discord': 'Entertainment',
+  // Social Media
+  'x': 'Social Media',
+  'twitter': 'Social Media',
+  'instagram': 'Social Media',
+  'tiktok': 'Social Media',
+  'tik tok': 'Social Media',
+  'telegram': 'Social Media',
+  'whatsapp': 'Social Media',
+  'linkedin': 'Social Media',
+  'threads': 'Social Media',
+  'bluesky': 'Social Media',
+  'mastodon': 'Social Media',
+  'reddit': 'Social Media',
+}
+
+function getAutoCategory(appName: string): string {
+  const key = appName.toLowerCase().trim()
+  return appCategoryMap[key] || 'Other'
+}
 
 export function AddSubscriptionModal({
   isOpen,
@@ -164,246 +235,331 @@ export function AddSubscriptionModal({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: 'spring', bounce: 0.2, duration: 0.4 }}
-            className="relative bg-[#0A0A0A] border border-[#1A1A1A] rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl"
+            className="relative bg-[#0A0A0A] border border-[#1A1A1A] rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl scroll-smooth"
+            style={{
+              scrollbarWidth: 'thin',
+              scrollbarColor: '#333333 transparent',
+            }}
           >
+            <style>{`
+              .scroll-smooth::-webkit-scrollbar {
+                width: 6px;
+              }
+              .scroll-smooth::-webkit-scrollbar-track {
+                background: transparent;
+              }
+              .scroll-smooth::-webkit-scrollbar-thumb {
+                background: #333333;
+                border-radius: 3px;
+              }
+              .scroll-smooth::-webkit-scrollbar-thumb:hover {
+                background: #555555;
+              }
+            `}</style>
+
             {/* Header */}
-            <div className="sticky top-0 bg-[#0A0A0A] border-b border-[#1A1A1A] px-6 py-4 flex items-center justify-between z-10">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-[#111111] border border-[#1A1A1A] rounded-lg flex items-center justify-center">
-                  <PreviewIcon className="w-4 h-4 text-[#999999]" />
+            <div className="sticky top-0 bg-[#0A0A0A] border-b border-[#1A1A1A] px-6 py-5 flex items-center justify-between z-10 backdrop-blur-sm bg-[#0A0A0A]/95">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 bg-gradient-to-br from-[#1A1A1A] to-[#0D0D0D] border border-[#2A2A2A] rounded-xl flex items-center justify-center">
+                  <PreviewIcon className="w-5 h-5 text-white" />
                 </div>
-                <h2 className="text-white font-semibold text-base">
-                  {isEditing ? 'Edit Subscription' : 'Add Subscription'}
-                </h2>
+                <div>
+                  <h2 className="text-white font-semibold text-lg">
+                    {isEditing ? 'Edit Subscription' : 'Add Subscription'}
+                  </h2>
+                  <p className="text-[#666666] text-xs">Manage your subscription details</p>
+                </div>
               </div>
               <button
                 onClick={onClose}
-                className="text-[#555555] hover:text-white p-1 rounded-lg hover:bg-[#111111] transition-all duration-200"
+                className="text-[#555555] hover:text-white p-2 rounded-lg hover:bg-[#111111] transition-all duration-200"
               >
                 <FiX className="w-5 h-5" />
               </button>
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmit} className="p-6 space-y-5">
+            <form onSubmit={handleSubmit} className="p-6 space-y-6">
               {formError && (
-                <div className="bg-[#1A1A1A] border border-[#333333] rounded-lg p-3">
-                  <p className="text-[#999999] text-sm">{formError}</p>
-                </div>
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-red-500/10 border border-red-500/30 rounded-xl p-4"
+                >
+                  <p className="text-red-400 text-sm font-medium">{formError}</p>
+                </motion.div>
               )}
-              {/* Name with autocomplete */}
-              <div className="relative">
-                <label className="block text-[#999999] text-xs font-medium mb-2 uppercase tracking-wider">
-                  Subscription Name *
-                </label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => {
-                    setName(e.target.value)
-                    setShowSuggestions(true)
-                  }}
-                  onFocus={() => setShowSuggestions(true)}
-                  onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                  placeholder="e.g., Netflix, Spotify"
-                  required
-                  className="w-full bg-[#0D0D0D] border border-[#1F1F1F] text-white rounded-lg px-4 py-3 text-sm placeholder:text-[#444444] focus:border-[#555555] focus:outline-none transition-colors"
-                />
-                {showSuggestions && filteredSuggestions.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-[#111111] border border-[#1A1A1A] rounded-lg overflow-hidden z-20 shadow-xl">
-                    {filteredSuggestions.slice(0, 5).map((suggestion) => {
-                      const SuggIcon = getSubscriptionIcon(suggestion)
-                      return (
-                        <button
-                          key={suggestion}
-                          type="button"
-                          onMouseDown={() => {
-                            setName(suggestion)
-                            setShowSuggestions(false)
-                          }}
-                          className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-[#1A1A1A] transition-colors"
-                        >
-                          <SuggIcon className="w-4 h-4 text-[#666666]" />
-                          <span className="text-white text-sm">{suggestion}</span>
-                        </button>
-                      )
-                    })}
-                  </div>
-                )}
-              </div>
 
-              {/* Category and Cost */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[#999999] text-xs font-medium mb-2 uppercase tracking-wider">
-                    Category *
-                  </label>
-                  <select
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    className="w-full bg-[#0D0D0D] border border-[#1F1F1F] text-white rounded-lg px-4 py-3 text-sm focus:border-[#555555] focus:outline-none transition-colors appearance-none"
-                  >
-                    {categories.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
-                      </option>
-                    ))}
-                  </select>
+              {/* Section 1: Basic Info */}
+              <div className="space-y-5">
+                <div className="px-3 pb-3 border-b border-[#1A1A1A]">
+                  <h3 className="text-[#999999] text-xs font-bold uppercase tracking-widest">Basic Information</h3>
                 </div>
-                <div>
-                  <label className="block text-[#999999] text-xs font-medium mb-2 uppercase tracking-wider">
-                    Cost *
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#555555] text-sm">$</span>
-                    <input
-                      type="number"
-                      value={cost}
-                      onChange={(e) => setCost(e.target.value)}
-                      placeholder="9.99"
-                      required
-                      min="0"
-                      step="0.01"
-                      className="w-full bg-[#0D0D0D] border border-[#1F1F1F] text-white rounded-lg pl-7 pr-4 py-3 text-sm placeholder:text-[#444444] focus:border-[#555555] focus:outline-none transition-colors"
-                    />
-                  </div>
-                </div>
-              </div>
 
-              {/* Billing Cycle and Status */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[#999999] text-xs font-medium mb-2 uppercase tracking-wider">
-                    Billing Cycle *
-                  </label>
-                  <select
-                    value={billingCycle}
-                    onChange={(e) => setBillingCycle(e.target.value as BillingCycle)}
-                    className="w-full bg-[#0D0D0D] border border-[#1F1F1F] text-white rounded-lg px-4 py-3 text-sm focus:border-[#555555] focus:outline-none transition-colors appearance-none"
-                  >
-                    <option value="monthly">Monthly</option>
-                    <option value="yearly">Yearly</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-[#999999] text-xs font-medium mb-2 uppercase tracking-wider">
-                    Status *
-                  </label>
-                  <select
-                    value={status}
-                    onChange={(e) => setStatus(e.target.value as SubscriptionStatus)}
-                    className="w-full bg-[#0D0D0D] border border-[#1F1F1F] text-white rounded-lg px-4 py-3 text-sm focus:border-[#555555] focus:outline-none transition-colors appearance-none"
-                  >
-                    <option value="active">Active</option>
-                    <option value="trial">Trial</option>
-                    <option value="cancelled">Cancelled</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Renewal Date and Trial End Date */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[#999999] text-xs font-medium mb-2 uppercase tracking-wider">
-                    Renewal Date *
+                {/* Name with autocomplete */}
+                <div className="relative">
+                  <label className="block text-[#CCCCCC] text-sm font-medium mb-3">
+                    Subscription Name <span className="text-red-400">*</span>
                   </label>
                   <input
-                    type="date"
-                    value={renewalDate}
-                    onChange={(e) => setRenewalDate(e.target.value)}
+                    type="text"
+                    value={name}
+                    onChange={(e) => {
+                      setName(e.target.value)
+                      setShowSuggestions(true)
+                    }}
+                    onFocus={() => setShowSuggestions(true)}
+                    onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                    placeholder="e.g., Netflix, Spotify"
                     required
-                    className="w-full bg-[#0D0D0D] border border-[#1F1F1F] text-white rounded-lg px-4 py-3 text-sm focus:border-[#555555] focus:outline-none transition-colors [color-scheme:dark]"
+                    className="w-full bg-[#0D0D0D] border border-[#1F1F1F] text-white rounded-xl px-4 py-3.5 text-sm placeholder:text-[#444444] focus:border-[#444444] focus:outline-none focus:ring-1 focus:ring-[#333333] transition-all"
                   />
+                  {showSuggestions && filteredSuggestions.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="absolute top-full left-0 right-0 mt-2 bg-[#111111] border border-[#1A1A1A] rounded-xl overflow-hidden z-20 shadow-2xl backdrop-blur-sm"
+                    >
+                      {filteredSuggestions.slice(0, 6).map((suggestion) => {
+                        const SuggIcon = getSubscriptionIcon(suggestion)
+                        return (
+                          <button
+                            key={suggestion}
+                            type="button"
+                            onMouseDown={() => {
+                              setName(suggestion)
+                              setCategory(getAutoCategory(suggestion))
+                              setShowSuggestions(false)
+                            }}
+                            className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[#1A1A1A] transition-colors border-b border-[#0D0D0D] last:border-b-0"
+                          >
+                            <SuggIcon className="w-4 h-4 text-[#666666]" />
+                            <span className="text-white text-sm flex-1">{suggestion}</span>
+                            <span className="text-[#555555] text-xs bg-[#0D0D0D] px-2.5 py-1 rounded-full">{getAutoCategory(suggestion)}</span>
+                          </button>
+                        )
+                      })}
+                    </motion.div>
+                  )}
                 </div>
-                {status === 'trial' && (
+
+                {/* Category and Cost */}
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[#999999] text-xs font-medium mb-2 uppercase tracking-wider">
-                      Trial End Date
+                    <label className="block text-[#CCCCCC] text-sm font-medium mb-3">
+                      Category <span className="text-red-400">*</span>
+                    </label>
+                    <select
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value)}
+                      className="w-full bg-[#0D0D0D] border border-[#1F1F1F] text-white rounded-xl px-4 py-3.5 text-sm focus:border-[#444444] focus:outline-none focus:ring-1 focus:ring-[#333333] transition-all appearance-none"
+                      style={{
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666666' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
+                        backgroundRepeat: 'no-repeat',
+                        backgroundPosition: 'right 1rem center',
+                        paddingRight: '2.5rem',
+                      }}
+                    >
+                      {categories.map((cat) => (
+                        <option key={cat} value={cat}>
+                          {cat}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[#CCCCCC] text-sm font-medium mb-3">
+                      Cost <span className="text-red-400">*</span>
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#555555] text-sm font-medium">$</span>
+                      <input
+                        type="number"
+                        value={cost}
+                        onChange={(e) => setCost(e.target.value)}
+                        placeholder="0.00"
+                        required
+                        min="0"
+                        step="0.01"
+                        className="w-full bg-[#0D0D0D] border border-[#1F1F1F] text-white rounded-xl pl-8 pr-4 py-3.5 text-sm placeholder:text-[#444444] focus:border-[#444444] focus:outline-none focus:ring-1 focus:ring-[#333333] transition-all"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 2: Billing Details */}
+              <div className="space-y-5">
+                <div className="px-3 pb-3 border-b border-[#1A1A1A]">
+                  <h3 className="text-[#999999] text-xs font-bold uppercase tracking-widest">Billing Details</h3>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[#CCCCCC] text-sm font-medium mb-3">
+                      Billing Cycle <span className="text-red-400">*</span>
+                    </label>
+                    <select
+                      value={billingCycle}
+                      onChange={(e) => setBillingCycle(e.target.value as BillingCycle)}
+                      className="w-full bg-[#0D0D0D] border border-[#1F1F1F] text-white rounded-xl px-4 py-3.5 text-sm focus:border-[#444444] focus:outline-none focus:ring-1 focus:ring-[#333333] transition-all appearance-none"
+                      style={{
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666666' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
+                        backgroundRepeat: 'no-repeat',
+                        backgroundPosition: 'right 1rem center',
+                        paddingRight: '2.5rem',
+                      }}
+                    >
+                      <option value="monthly">Monthly</option>
+                      <option value="yearly">Yearly</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[#CCCCCC] text-sm font-medium mb-3">
+                      Status <span className="text-red-400">*</span>
+                    </label>
+                    <select
+                      value={status}
+                      onChange={(e) => setStatus(e.target.value as SubscriptionStatus)}
+                      className="w-full bg-[#0D0D0D] border border-[#1F1F1F] text-white rounded-xl px-4 py-3.5 text-sm focus:border-[#444444] focus:outline-none focus:ring-1 focus:ring-[#333333] transition-all appearance-none"
+                      style={{
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666666' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
+                        backgroundRepeat: 'no-repeat',
+                        backgroundPosition: 'right 1rem center',
+                        paddingRight: '2.5rem',
+                      }}
+                    >
+                      <option value="active">Active</option>
+                      <option value="trial">Trial</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Renewal Date and Trial End Date */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[#CCCCCC] text-sm font-medium mb-3">
+                      Renewal Date <span className="text-red-400">*</span>
                     </label>
                     <input
                       type="date"
-                      value={trialEndDate}
-                      onChange={(e) => setTrialEndDate(e.target.value)}
-                      className="w-full bg-[#0D0D0D] border border-[#1F1F1F] text-white rounded-lg px-4 py-3 text-sm focus:border-[#555555] focus:outline-none transition-colors [color-scheme:dark]"
+                      value={renewalDate}
+                      onChange={(e) => setRenewalDate(e.target.value)}
+                      required
+                      className="w-full bg-[#0D0D0D] border border-[#1F1F1F] text-white rounded-xl px-4 py-3.5 text-sm focus:border-[#444444] focus:outline-none focus:ring-1 focus:ring-[#333333] transition-all [color-scheme:dark]"
                     />
                   </div>
-                )}
+                  {status === 'trial' && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                    >
+                      <label className="block text-[#CCCCCC] text-sm font-medium mb-3">
+                        Trial End Date
+                      </label>
+                      <input
+                        type="date"
+                        value={trialEndDate}
+                        onChange={(e) => setTrialEndDate(e.target.value)}
+                        className="w-full bg-[#0D0D0D] border border-[#1F1F1F] text-white rounded-xl px-4 py-3.5 text-sm focus:border-[#444444] focus:outline-none focus:ring-1 focus:ring-[#333333] transition-all [color-scheme:dark]"
+                      />
+                    </motion.div>
+                  )}
+                </div>
               </div>
 
-              {/* Cancellation */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[#999999] text-xs font-medium mb-2 uppercase tracking-wider">
-                    Cancellation Difficulty
-                  </label>
-                  <select
-                    value={cancellationDifficulty}
-                    onChange={(e) =>
-                      setCancellationDifficulty(e.target.value as CancellationDifficulty)
-                    }
-                    className="w-full bg-[#0D0D0D] border border-[#1F1F1F] text-white rounded-lg px-4 py-3 text-sm focus:border-[#555555] focus:outline-none transition-colors appearance-none"
-                  >
-                    <option value="easy">Easy</option>
-                    <option value="medium">Medium</option>
-                    <option value="hard">Hard</option>
-                  </select>
+              {/* Section 3: Cancellation & Notes */}
+              <div className="space-y-5">
+                <div className="px-3 pb-3 border-b border-[#1A1A1A]">
+                  <h3 className="text-[#999999] text-xs font-bold uppercase tracking-widest">Additional Details</h3>
                 </div>
+
+                {/* Cancellation */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[#CCCCCC] text-sm font-medium mb-3">
+                      Cancellation Difficulty
+                    </label>
+                    <select
+                      value={cancellationDifficulty}
+                      onChange={(e) =>
+                        setCancellationDifficulty(e.target.value as CancellationDifficulty)
+                      }
+                      className="w-full bg-[#0D0D0D] border border-[#1F1F1F] text-white rounded-xl px-4 py-3.5 text-sm focus:border-[#444444] focus:outline-none focus:ring-1 focus:ring-[#333333] transition-all appearance-none"
+                      style={{
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666666' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
+                        backgroundRepeat: 'no-repeat',
+                        backgroundPosition: 'right 1rem center',
+                        paddingRight: '2.5rem',
+                      }}
+                    >
+                      <option value="easy">Easy</option>
+                      <option value="medium">Medium</option>
+                      <option value="hard">Hard</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[#CCCCCC] text-sm font-medium mb-3">
+                      Cancellation Link
+                    </label>
+                    <input
+                      type="url"
+                      value={cancellationLink}
+                      onChange={(e) => setCancellationLink(e.target.value)}
+                      placeholder="https://..."
+                      className="w-full bg-[#0D0D0D] border border-[#1F1F1F] text-white rounded-xl px-4 py-3.5 text-sm placeholder:text-[#444444] focus:border-[#444444] focus:outline-none focus:ring-1 focus:ring-[#333333] transition-all"
+                    />
+                  </div>
+                </div>
+
+                {/* Notes */}
                 <div>
-                  <label className="block text-[#999999] text-xs font-medium mb-2 uppercase tracking-wider">
-                    Cancellation Link
+                  <label className="block text-[#CCCCCC] text-sm font-medium mb-3">
+                    Notes
                   </label>
-                  <input
-                    type="url"
-                    value={cancellationLink}
-                    onChange={(e) => setCancellationLink(e.target.value)}
-                    placeholder="https://..."
-                    className="w-full bg-[#0D0D0D] border border-[#1F1F1F] text-white rounded-lg px-4 py-3 text-sm placeholder:text-[#444444] focus:border-[#555555] focus:outline-none transition-colors"
+                  <textarea
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Add any additional notes about this subscription..."
+                    rows={3}
+                    className="w-full bg-[#0D0D0D] border border-[#1F1F1F] text-white rounded-xl px-4 py-3.5 text-sm placeholder:text-[#444444] focus:border-[#444444] focus:outline-none focus:ring-1 focus:ring-[#333333] transition-all resize-none"
                   />
                 </div>
               </div>
 
-              {/* Notes */}
-              <div>
-                <label className="block text-[#999999] text-xs font-medium mb-2 uppercase tracking-wider">
-                  Notes
-                </label>
-                <textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Any additional notes..."
-                  rows={3}
-                  className="w-full bg-[#0D0D0D] border border-[#1F1F1F] text-white rounded-lg px-4 py-3 text-sm placeholder:text-[#444444] focus:border-[#555555] focus:outline-none transition-colors resize-none"
-                />
-              </div>
-
               {/* Actions */}
-              <div className="flex items-center justify-between pt-2">
+              <div className="flex items-center justify-between pt-4 border-t border-[#1A1A1A]">
                 {isEditing ? (
                   <div>
                     {showDeleteConfirm ? (
-                      <div className="flex items-center gap-2">
-                        <span className="text-[#666666] text-xs">Delete?</span>
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="flex items-center gap-2"
+                      >
+                        <span className="text-[#666666] text-xs font-medium">Delete this subscription?</span>
                         <button
                           type="button"
                           onClick={handleDelete}
                           disabled={deleting}
-                          className="text-white text-xs px-3 py-1.5 border border-[#333333] rounded-lg hover:bg-[#1A1A1A] transition-all"
+                          className="text-white text-xs px-4 py-2 bg-red-500/20 border border-red-500/50 rounded-lg hover:bg-red-500/30 transition-all disabled:opacity-50"
                         >
-                          {deleting ? 'Deleting...' : 'Yes'}
+                          {deleting ? 'Deleting...' : 'Delete'}
                         </button>
                         <button
                           type="button"
                           onClick={() => setShowDeleteConfirm(false)}
-                          className="text-[#555555] text-xs px-3 py-1.5 border border-[#1A1A1A] rounded-lg hover:text-white transition-all"
+                          className="text-[#555555] text-xs px-4 py-2 border border-[#1A1A1A] rounded-lg hover:border-[#333333] hover:text-white transition-all"
                         >
-                          No
+                          Cancel
                         </button>
-                      </div>
+                      </motion.div>
                     ) : (
                       <button
                         type="button"
                         onClick={() => setShowDeleteConfirm(true)}
-                        className="text-[#555555] text-xs hover:text-white transition-colors"
+                        className="text-[#555555] text-xs hover:text-red-400 transition-colors font-medium"
                       >
                         Delete subscription
                       </button>
@@ -417,14 +573,14 @@ export function AddSubscriptionModal({
                   <button
                     type="button"
                     onClick={onClose}
-                    className="text-[#666666] text-sm px-5 py-2.5 border border-[#1A1A1A] rounded-lg hover:border-[#333333] hover:text-white transition-all duration-200"
+                    className="text-[#CCCCCC] text-sm font-medium px-6 py-2.5 border border-[#1A1A1A] rounded-xl hover:border-[#333333] hover:bg-[#0D0D0D] transition-all duration-200"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={loading}
-                    className="bg-white text-black text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-gray-100 transition-all duration-200 disabled:opacity-50 flex items-center gap-2"
+                    className="bg-white text-black text-sm font-semibold px-6 py-2.5 rounded-xl hover:bg-gray-100 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg"
                   >
                     {loading ? (
                       <>

@@ -6,12 +6,15 @@ import { FiLoader, FiDownload, FiAlertTriangle } from 'react-icons/fi'
 import { useAuthContext } from '@/components/auth/AuthProvider'
 import { updatePassword } from '@/lib/supabase/auth'
 import { useSubscriptions } from '@/hooks/useSubscriptions'
+import { usePreferences } from '@/hooks/usePreferences'
+import { Switch } from '@/components/ui/switch'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 
 export default function SettingsPage() {
   const { user } = useAuthContext()
   const { subscriptions } = useSubscriptions()
+  const { preferences, loading: prefsLoading, saving: prefsSaving, updatePreferences } = usePreferences()
   const router = useRouter()
 
   const [newPassword, setNewPassword] = useState('')
@@ -64,14 +67,13 @@ export default function SettingsPage() {
     setDeleteLoading(true)
     const supabase = createClient()
 
-    // Delete all subscriptions first
     const { data: { user: currentUser } } = await supabase.auth.getUser()
     if (currentUser) {
+      await supabase.from('user_preferences').delete().eq('user_id', currentUser.id)
       await supabase.from('reminders').delete().eq('user_id', currentUser.id)
       await supabase.from('subscriptions').delete().eq('user_id', currentUser.id)
     }
 
-    // Sign out
     await supabase.auth.signOut()
     setDeleteLoading(false)
     router.push('/login')
@@ -110,11 +112,104 @@ export default function SettingsPage() {
           </div>
         </motion.div>
 
+        {/* Notification Preferences */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.12 }}
+          className="bg-[#0A0A0A] border border-[#1A1A1A] rounded-2xl p-6"
+        >
+          <h3 className="text-white font-semibold text-sm mb-4">Notification Preferences</h3>
+
+          {prefsLoading ? (
+            <div className="flex items-center gap-2 py-4">
+              <FiLoader className="w-4 h-4 animate-spin text-[#555555]" />
+              <span className="text-[#555555] text-sm">Loading preferences...</span>
+            </div>
+          ) : (
+            <div className="space-y-5">
+              {/* Email reminders for renewals */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-white text-sm">Email reminders for renewals</p>
+                  <p className="text-[#555555] text-xs mt-0.5">
+                    Receive email before subscription renewals
+                  </p>
+                </div>
+                <Switch
+                  checked={preferences.email_reminders_renewal}
+                  onCheckedChange={(checked: boolean) =>
+                    updatePreferences({ email_reminders_renewal: checked })
+                  }
+                  disabled={prefsSaving}
+                />
+              </div>
+
+              {/* Email reminders for trials */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-white text-sm">Email reminders for trials ending</p>
+                  <p className="text-[#555555] text-xs mt-0.5">
+                    Receive email before trial periods expire
+                  </p>
+                </div>
+                <Switch
+                  checked={preferences.email_reminders_trial}
+                  onCheckedChange={(checked: boolean) =>
+                    updatePreferences({ email_reminders_trial: checked })
+                  }
+                  disabled={prefsSaving}
+                />
+              </div>
+
+              {/* In-app reminders */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-white text-sm">In-app reminders</p>
+                  <p className="text-[#555555] text-xs mt-0.5">
+                    Show reminder notifications in the sidebar bell
+                  </p>
+                </div>
+                <Switch
+                  checked={preferences.in_app_reminders}
+                  onCheckedChange={(checked: boolean) =>
+                    updatePreferences({ in_app_reminders: checked })
+                  }
+                  disabled={prefsSaving}
+                />
+              </div>
+
+              {/* Reminder advance days */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-white text-sm">Reminder advance notice</p>
+                  <p className="text-[#555555] text-xs mt-0.5">
+                    How many days before renewal to be reminded
+                  </p>
+                </div>
+                <select
+                  value={preferences.reminder_days_before}
+                  onChange={(e) =>
+                    updatePreferences({ reminder_days_before: parseInt(e.target.value) as 2 | 3 | 5 | 7 })
+                  }
+                  disabled={prefsSaving}
+                  className="bg-[#0D0D0D] border border-[#1F1F1F] text-white rounded-lg px-3 py-2 text-sm focus:border-[#555555] focus:outline-none transition-colors appearance-none"
+                >
+                  <option value={2}>2 days</option>
+                  <option value={3}>3 days</option>
+                  <option value={5}>5 days</option>
+                  <option value={7}>1 week</option>
+                </select>
+              </div>
+            </div>
+          )}
+        </motion.div>
+
         {/* Change Password */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15 }}
+          transition={{ delay: 0.17 }}
           className="bg-[#0A0A0A] border border-[#1A1A1A] rounded-2xl p-6"
         >
           <h3 className="text-white font-semibold text-sm mb-4">Change Password</h3>
@@ -173,7 +268,7 @@ export default function SettingsPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
+          transition={{ delay: 0.22 }}
           className="bg-[#0A0A0A] border border-[#1A1A1A] rounded-2xl p-6"
         >
           <h3 className="text-white font-semibold text-sm mb-2">Export Data</h3>
@@ -193,7 +288,7 @@ export default function SettingsPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25 }}
+          transition={{ delay: 0.27 }}
           className="bg-[#0A0A0A] border border-[#1A1A1A] rounded-2xl p-6"
         >
           <h3 className="text-white font-semibold text-sm mb-2">Delete Account</h3>
