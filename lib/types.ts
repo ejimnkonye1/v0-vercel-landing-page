@@ -69,3 +69,72 @@ export interface UserPreferences {
   created_at: string
   updated_at: string
 }
+
+// AI Advisor Types
+export type AIInsightType = 'success' | 'warning' | 'error' | 'info'
+export type AIRecommendationAction = 'keep' | 'cancel' | 'downgrade' | 'review'
+
+export interface AIInsight {
+  type: AIInsightType
+  message: string
+}
+
+export interface AIRecommendation {
+  subscriptionName: string
+  action: AIRecommendationAction
+  reason: string
+  potentialSavings: number
+  alternative?: string
+}
+
+export interface AIAdvisorAnalysis {
+  summary: string
+  totalPotentialSavings: number
+  insights: AIInsight[]
+  recommendations: AIRecommendation[]
+  tips: string[]
+}
+
+export interface AIAdvisorResponse {
+  success: boolean
+  analysis?: AIAdvisorAnalysis
+  error?: string
+}
+
+// Price Change Detector Types
+export interface PriceHistory {
+  id: string
+  subscription_id: string
+  user_id: string
+  old_price: number
+  new_price: number
+  billing_cycle: BillingCycle
+  changed_at: string
+}
+
+export interface CrowdsourcedPrice {
+  id: string
+  service_name: string
+  billing_cycle: BillingCycle
+  avg_price: number
+  min_price: number
+  max_price: number
+  report_count: number
+  last_reported: string
+  created_at: string
+  updated_at: string
+}
+
+export interface PriceAlert {
+  subscriptionId: string
+  subscriptionName: string
+  yourPrice: number
+  communityAvgPrice: number
+  communityMinPrice: number
+  communityMaxPrice: number
+  priceDifference: number
+  percentageDiff: number
+  billingCycle: BillingCycle
+  reportCount: number
+  alertType: 'overpaying' | 'underpaying' | 'price_increased' | 'price_decreased'
+}

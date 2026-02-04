@@ -8,6 +8,82 @@ export function useReminders() {
   const [reminders, setReminders] = useState<Reminder[]>([])
   const [loading, setLoading] = useState(true)
   const supabaseRef = useRef(createClient())
+  const hasBackfilledRef = useRef(false)
+
+  const backfillReminders = useCallback(async (userId: string) => {
+    if (hasBackfilledRef.current) return
+    hasBackfilledRef.current = true
+
+    const supabase = supabaseRef.current
+
+    // Get user's preferred reminder advance days
+    const { data: prefs } = await supabase
+      .from('user_preferences')
+      .select('reminder_days_before')
+      .eq('user_id', userId)
+      .single()
+    const daysBefore = prefs?.reminder_days_before ?? 2
+
+    // Get all active/trial subscriptions
+    const { data: subs } = await supabase
+      .from('subscriptions')
+      .select('*')
+      .eq('user_id', userId)
+      .in('status', ['active', 'trial'])
+
+    if (!subs || subs.length === 0) return
+
+    for (const sub of subs) {
+      // Check if there's already an unsent reminder for this subscription
+      const { data: existingReminder } = await supabase
+        .from('reminders')
+        .select('id')
+        .eq('subscription_id', sub.id)
+        .eq('reminder_type', 'renewal')
+        .eq('is_sent', false)
+        .single()
+
+      if (!existingReminder) {
+        // Create reminder for this subscription
+        const renewalDate = new Date(sub.renewal_date)
+        const reminderDate = new Date(renewalDate)
+        reminderDate.setDate(reminderDate.getDate() - daysBefore)
+
+        await supabase.from('reminders').insert({
+          user_id: userId,
+          subscription_id: sub.id,
+          reminder_type: 'renewal',
+          reminder_date: reminderDate.toISOString(),
+          is_sent: false,
+        })
+      }
+
+      // Check for trial reminder if needed
+      if (sub.status === 'trial' && sub.trial_end_date) {
+        const { data: existingTrialReminder } = await supabase
+          .from('reminders')
+          .select('id')
+          .eq('subscription_id', sub.id)
+          .eq('reminder_type', 'trial_ending')
+          .eq('is_sent', false)
+          .single()
+
+        if (!existingTrialReminder) {
+          const trialEnd = new Date(sub.trial_end_date)
+          const trialReminder = new Date(trialEnd)
+          trialReminder.setDate(trialReminder.getDate() - daysBefore)
+
+          await supabase.from('reminders').insert({
+            user_id: userId,
+            subscription_id: sub.id,
+            reminder_type: 'trial_ending',
+            reminder_date: trialReminder.toISOString(),
+            is_sent: false,
+          })
+        }
+      }
+    }
+  }, [])
 
   const fetchReminders = useCallback(async () => {
     const supabase = supabaseRef.current
@@ -16,6 +92,9 @@ export function useReminders() {
       setLoading(false)
       return
     }
+
+    // Backfill any missing reminders first
+    await backfillReminders(user.id)
 
     // Fetch all unsent reminders (past and upcoming within 7 days)
     // Past reminders should be shown immediately as they need attention
@@ -43,7 +122,7 @@ export function useReminders() {
       setReminders(inAppEnabled ? (data as Reminder[]) : [])
     }
     setLoading(false)
-  }, [])
+  }, [backfillReminders])
 
   useEffect(() => {
     fetchReminders()

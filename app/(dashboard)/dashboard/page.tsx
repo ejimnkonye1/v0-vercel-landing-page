@@ -16,6 +16,8 @@ import { BudgetAlert } from '@/components/ui/BudgetAlert'
 import { PortfolioHealth } from '@/components/dashboard/PortfolioHealth'
 import { Graveyard } from '@/components/dashboard/Graveyard'
 import { ShareSavings } from '@/components/dashboard/ShareSavings'
+import { AIAdvisor } from '@/components/dashboard/AIAdvisor'
+import { PriceAlerts } from '@/components/dashboard/PriceAlerts'
 import { deleteSubscription } from '@/lib/supabase/queries'
 import type { Subscription } from '@/lib/types'
 
@@ -142,6 +144,12 @@ export default function DashboardPage() {
         <div className="space-y-4">
           <UpcomingRenewals subscriptions={subscriptions} />
           <PortfolioHealth subscriptions={subscriptions} />
+          <AIAdvisor
+            subscriptions={subscriptions}
+            totalMonthlySpend={totalMonthlySpend}
+            totalYearlyProjection={totalYearlyProjection}
+          />
+          <PriceAlerts />
           <Graveyard subscriptions={subscriptions} onRevive={refetch} />
         </div>
       </div>

@@ -1,5 +1,37 @@
 import { createClient } from './client'
-import type { Subscription, SubscriptionFormData, Reminder, UserPreferences } from '@/lib/types'
+import type { Subscription, SubscriptionFormData, Reminder, UserPreferences, BillingCycle } from '@/lib/types'
+
+// Helper to report prices to crowdsourced database
+async function reportPriceToCrowdsource(
+  subscriptionId: string,
+  serviceName: string,
+  newPrice: number,
+  billingCycle: BillingCycle,
+  oldPrice?: number
+) {
+  try {
+    const supabase = createClient()
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session?.access_token) return
+
+    await fetch('/api/price-changes', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({
+        subscriptionId,
+        serviceName,
+        oldPrice,
+        newPrice,
+        billingCycle,
+      }),
+    })
+  } catch {
+    // Silently fail - this is non-critical
+  }
+}
 
 async function getCurrentUserId() {
   const supabase = createClient()
@@ -54,6 +86,9 @@ export async function createSubscription(formData: SubscriptionFormData) {
     .single()
 
   if (!error && data) {
+    // Report price to crowdsourced database (fire and forget)
+    reportPriceToCrowdsource(data.id, formData.name, formData.cost, formData.billing_cycle).catch(() => {})
+
     // Get user's preferred reminder advance days
     const { data: prefs } = await supabase
       .from('user_preferences')
@@ -156,6 +191,14 @@ export async function updateSubscription(id: string, formData: Partial<Subscript
   const userId = await getCurrentUserId()
   if (!userId) return { data: null, error: { message: 'Not authenticated' } }
 
+  // Fetch current subscription to track price changes
+  const { data: currentSub } = await supabase
+    .from('subscriptions')
+    .select('name, cost, billing_cycle')
+    .eq('id', id)
+    .eq('user_id', userId)
+    .single()
+
   const { data, error } = await supabase
     .from('subscriptions')
     .update({
@@ -166,6 +209,19 @@ export async function updateSubscription(id: string, formData: Partial<Subscript
     .eq('user_id', userId)
     .select()
     .single()
+
+  if (!error && data) {
+    // Report price change if cost changed
+    if (formData.cost !== undefined && currentSub && formData.cost !== currentSub.cost) {
+      reportPriceToCrowdsource(
+        id,
+        formData.name || currentSub.name,
+        formData.cost,
+        (formData.billing_cycle || currentSub.billing_cycle) as BillingCycle,
+        currentSub.cost
+      ).catch(() => {})
+    }
+  }
 
   if (!error && data && formData.renewal_date) {
     // Delete old unsent renewal reminders for this subscription

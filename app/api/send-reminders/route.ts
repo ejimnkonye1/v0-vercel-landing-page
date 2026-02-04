@@ -1,13 +1,19 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { Resend } from 'resend'
+import nodemailer from 'nodemailer'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASSWORD,
+  },
+})
 
 export async function GET(request: Request) {
   // Verify cron secret to prevent unauthorized access
@@ -143,8 +149,8 @@ export async function GET(request: Request) {
       `
 
       try {
-        await resend.emails.send({
-          from: 'SubTracker <onboarding@resend.dev>',
+        await transporter.sendMail({
+          from: `SubTracker <${process.env.EMAIL_USER}>`,
           to: email,
           subject: `Reminder: ${filteredReminders.length === 1 ? `${filteredReminders[0].subscription?.name || 'Subscription'} renewal coming up` : `${filteredReminders.length} subscriptions renewing soon`}`,
           html: htmlBody,
