@@ -235,7 +235,7 @@ export function ExtensionStatus() {
                       </p>
                       <p className={`text-xs ${isDark ? 'text-[#555555]' : 'text-gray-500'}`}>
                         The extension monitors the websites you visit and matches them against 25+ known subscription services.
-                        When a subscription service is detected, you can add it to SubTracker with one click.
+                        When a subscription service is detected, you can add it to SubWise with one click.
                         No browsing data is sent to our servers — detection happens entirely in your browser.
                       </p>
                     </div>

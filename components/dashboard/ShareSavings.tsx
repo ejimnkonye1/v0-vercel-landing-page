@@ -19,7 +19,7 @@ export function ShareSavings({ totalSavings, subscriptionCount, cancelledCount }
   const [copied, setCopied] = useState(false)
   const cardRef = useRef<HTMLDivElement>(null)
 
-  const shareText = `I saved ${formatAmount(totalSavings)} this year by tracking my subscriptions with SubTracker! Managing ${subscriptionCount} active subscriptions and cancelled ${cancelledCount} I didn't need.`
+  const shareText = `I saved ${formatAmount(totalSavings)} this year by tracking my subscriptions with SubWise! Managing ${subscriptionCount} active subscriptions and cancelled ${cancelledCount} I didn't need.`
 
   const shareToTwitter = () => {
     const url = encodeURIComponent('https://subtracker.app')
@@ -159,7 +159,7 @@ export function ShareSavings({ totalSavings, subscriptionCount, cancelledCount }
                     <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
                       <span className="text-black font-bold text-sm">S</span>
                     </div>
-                    <span className="text-white font-semibold">SubTracker</span>
+                    <span className="text-white font-semibold">SubWise</span>
                   </div>
 
                   {/* Main content */}

@@ -22,6 +22,7 @@ import { AIAdvisor } from '@/components/dashboard/AIAdvisor'
 import { PriceAlerts } from '@/components/dashboard/PriceAlerts'
 import { ExtensionStatus } from '@/components/dashboard/ExtensionStatus'
 import { EmailReceiptScanner } from '@/components/dashboard/EmailReceiptScanner'
+import { CategoryBreakdown } from '@/components/dashboard/CategoryBreakdown'
 import { deleteSubscription } from '@/lib/supabase/queries'
 import type { Subscription } from '@/lib/types'
 
@@ -148,6 +149,7 @@ export default function DashboardPage() {
         <div className="md:col-span-2 lg:col-span-2 space-y-4">
           <SpendingChart subscriptions={subscriptions} />
           <SubscriptionGrowthChart subscriptions={subscriptions} />
+          <CategoryBreakdown subscriptions={subscriptions} />
         </div>
         <div className="space-y-4">
           <UpcomingRenewals subscriptions={subscriptions} />

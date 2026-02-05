@@ -1,7 +1,7 @@
 import { LoginForm } from '@/components/auth/LoginForm'
 
 export const metadata = {
-  title: 'Login - SubTracker',
+  title: 'Login - SubWise',
 }
 
 export default function LoginPage() {

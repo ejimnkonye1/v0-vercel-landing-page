@@ -11,7 +11,7 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'SubTracker - Take Control of Your Subscriptions',
+  title: 'SubWise - Take Control of Your Subscriptions',
   description: 'Track every subscription, cancel effortlessly. Never miss a renewal date or overpay again. Manage all your recurring payments in one place.',
   generator: 'v0.app',
   icons: {

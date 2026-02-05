@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FiGrid, FiSearch } from 'react-icons/fi'
+import { FiGrid, FiSearch, FiChevronDown, FiChevronUp } from 'react-icons/fi'
 import { useTheme } from '@/lib/theme-context'
 import { SubscriptionCard } from './SubscriptionCard'
 import type { Subscription, PriceTrendInfo } from '@/lib/types'
@@ -22,6 +22,7 @@ export function SubscriptionGrid({
 }: SubscriptionGridProps) {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<'all' | 'active' | 'trial' | 'cancelled'>('all')
+  const [expanded, setExpanded] = useState(false)
   const { isDark } = useTheme()
 
   const filtered = subscriptions.filter((sub) => {
@@ -29,6 +30,11 @@ export function SubscriptionGrid({
     const matchesFilter = filter === 'all' || sub.status === filter
     return matchesSearch && matchesFilter
   })
+
+  // 2 rows: 6 on xl (3-col), 4 on md (2-col), 2 on mobile (1-col) — use 6 as the cap
+  const INITIAL_COUNT = 6
+  const visible = expanded ? filtered : filtered.slice(0, INITIAL_COUNT)
+  const hasMore = filtered.length > INITIAL_COUNT
 
   return (
     <motion.div
@@ -71,6 +77,7 @@ export function SubscriptionGrid({
           }`}>
             {(['all', 'active', 'trial', 'cancelled'] as const).map((f) => (
               <button
+                type="button"
                 key={f}
                 onClick={() => setFilter(f)}
                 className={`text-xs px-3 py-1.5 rounded-md capitalize transition-all duration-200 whitespace-nowrap ${
@@ -100,21 +107,49 @@ export function SubscriptionGrid({
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          <AnimatePresence>
-            {filtered.map((sub, i) => (
-              <SubscriptionCard
-                key={sub.id}
-                subscription={sub}
-                allSubscriptions={subscriptions}
-                onEdit={onEdit}
-                onDelete={onDelete}
-                index={i}
-                priceTrend={priceTrends?.[sub.id]}
-              />
-            ))}
-          </AnimatePresence>
-        </div>
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            <AnimatePresence>
+              {visible.map((sub, i) => (
+                <SubscriptionCard
+                  key={sub.id}
+                  subscription={sub}
+                  allSubscriptions={subscriptions}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                  index={i}
+                  priceTrend={priceTrends?.[sub.id]}
+                />
+              ))}
+            </AnimatePresence>
+          </div>
+
+          {hasMore && (
+            <div className="flex justify-center mt-4">
+              <button
+                type="button"
+                onClick={() => setExpanded(!expanded)}
+                className={`flex items-center gap-1.5 text-xs px-4 py-2 rounded-lg border transition-all duration-200 ${
+                  isDark
+                    ? 'text-[#999999] hover:text-white border-[#1A1A1A] hover:border-[#333333]'
+                    : 'text-gray-600 hover:text-black border-gray-300 hover:border-gray-400'
+                }`}
+              >
+                {expanded ? (
+                  <>
+                    <FiChevronUp className="w-3.5 h-3.5" />
+                    Show less
+                  </>
+                ) : (
+                  <>
+                    <FiChevronDown className="w-3.5 h-3.5" />
+                    See more ({filtered.length - INITIAL_COUNT})
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+        </>
       )}
     </motion.div>
   )

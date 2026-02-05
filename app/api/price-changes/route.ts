@@ -63,24 +63,36 @@ export async function GET(request: Request) {
       return NextResponse.json({ success: false, error: 'Failed to fetch subscriptions' }, { status: 500 })
     }
 
-    // Get crowdsourced prices
-    const { data: crowdsourcedPrices, error: priceError } = await supabase
-      .from('crowdsourced_prices')
-      .select('*')
-
-    if (priceError) {
-      return NextResponse.json({ success: false, error: 'Failed to fetch price data' }, { status: 500 })
+    // Get crowdsourced prices (gracefully handle if table doesn't exist)
+    let crowdsourcedPrices: any[] = []
+    try {
+      const { data, error: priceError } = await supabase
+        .from('crowdsourced_prices')
+        .select('*')
+      if (!priceError && data) {
+        crowdsourcedPrices = data
+      }
+    } catch {
+      // Table may not exist yet - continue without crowdsourced data
     }
 
-    // Get user's all price changes (not just recent)
-    const { data: allPriceHistory, error: allHistoryError } = await supabase
-      .from('price_history')
-      .select('*, subscription:subscriptions(name)')
-      .eq('user_id', user.id)
-      .order('changed_at', { ascending: true })
+    // Get user's all price changes (gracefully handle if table doesn't exist)
+    let allPriceHistory: any[] = []
+    try {
+      const { data, error: historyError } = await supabase
+        .from('price_history')
+        .select('*, subscription:subscriptions(name)')
+        .eq('user_id', user.id)
+        .order('changed_at', { ascending: true })
+      if (!historyError && data) {
+        allPriceHistory = data
+      }
+    } catch {
+      // Table may not exist yet
+    }
 
     // Get recent price changes (limit 10)
-    const recentChanges = (allPriceHistory || []).slice(-10).reverse()
+    const recentChanges = allPriceHistory.slice(-10).reverse()
 
     // Build price history data points per subscription
     const priceHistory: Record<string, PriceHistoryDataPoint[]> = {}
@@ -88,7 +100,7 @@ export async function GET(request: Request) {
     const serviceTimelines: ServicePriceTimeline[] = []
 
     for (const sub of subscriptions) {
-      const subHistory = (allPriceHistory || []).filter(h => h.subscription_id === sub.id)
+      const subHistory = allPriceHistory.filter(h => h.subscription_id === sub.id)
       const dataPoints: PriceHistoryDataPoint[] = []
 
       for (const h of subHistory) {
@@ -127,7 +139,7 @@ export async function GET(request: Request) {
     // Build price alerts
     const alerts = []
     const priceMap = new Map(
-      (crowdsourcedPrices || []).map(p => [`${p.service_name}_${p.billing_cycle}`, p])
+      crowdsourcedPrices.map(p => [`${p.service_name}_${p.billing_cycle}`, p])
     )
 
     for (const sub of subscriptions) {
@@ -162,7 +174,7 @@ export async function GET(request: Request) {
       success: true,
       alerts,
       recentChanges,
-      totalReports: crowdsourcedPrices?.length || 0,
+      totalReports: crowdsourcedPrices.length,
       priceHistory,
       priceTrends,
       serviceTimelines,

@@ -13,6 +13,7 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const { isDark } = useTheme()
 
   return (
@@ -25,6 +26,8 @@ export default function DashboardLayout({
             : 'bg-gray-50 border-b border-gray-200'
         }`}>
           <button
+            type="button"
+            title="Open menu"
             onClick={() => setSidebarOpen(true)}
             className={`p-2 -ml-2 rounded-lg transition-all ${
               isDark
@@ -36,15 +39,22 @@ export default function DashboardLayout({
           </button>
           <div className="flex items-center gap-2 ml-3">
             <div className="w-7 h-7 bg-white rounded-lg flex items-center justify-center">
-              <span className="text-black font-bold text-xs">S</span>
+              <span className="text-black font-bold text-xs tracking-tight">SW</span>
             </div>
-            <span className="font-semibold text-white text-sm">SubTracker</span>
+            <span className={`font-semibold text-sm ${isDark ? 'text-white' : 'text-black'}`}>SubWise</span>
           </div>
         </div>
 
-        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        <Sidebar
+          isOpen={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+          collapsed={sidebarCollapsed}
+          onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+        />
 
-        <main className="lg:ml-64 min-h-screen pt-14 lg:pt-0">
+        <main className={`min-h-screen pt-14 lg:pt-0 transition-all duration-300 ${
+          sidebarCollapsed ? 'lg:ml-[68px]' : 'lg:ml-64'
+        }`}>
           <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
             <CurrencyProvider>
               {children}

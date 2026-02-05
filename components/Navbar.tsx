@@ -11,11 +11,11 @@ export function Navbar() {
         <Link href="/" className="flex items-center gap-2 group">
           <img
             src="/assets/real black logo.png"
-            alt="SubTracker Logo"
+            alt="SubWise Logo"
             className="w-8 h-8 object-contain opacity-90 group-hover:opacity-100 transition-opacity duration-200"
           />
           <span className="font-semibold text-base hidden sm:inline text-white group-hover:opacity-80 transition-opacity duration-200">
-            SubTracker
+            SubWise
           </span>
         </Link>
 

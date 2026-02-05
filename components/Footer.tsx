@@ -55,10 +55,10 @@ export function Footer() {
           >
             <Link href="/" className="flex items-center gap-2 mb-4 group">
               <div className="w-8 h-8 bg-white rounded flex items-center justify-center group-hover:bg-gray-200 transition-colors duration-200">
-                <span className="text-black font-bold text-sm">S</span>
+                <span className="text-black font-bold text-sm tracking-tight">SW</span>
               </div>
               <span className="font-semibold text-white group-hover:text-gray-300 transition-colors duration-200">
-                SubTracker
+                SubWise
               </span>
             </Link>
             <p className="text-gray-400 text-sm">
@@ -97,7 +97,7 @@ export function Footer() {
         {/* Bottom section */}
         <div className="border-t border-[#1a1a1a] pt-8 flex flex-col sm:flex-row justify-between items-center gap-6">
           <p className="text-gray-500 text-sm">
-            © {currentYear} SubTracker. All rights reserved.
+            © {currentYear} SubWise. All rights reserved.
           </p>
 
           {/* Social links */}

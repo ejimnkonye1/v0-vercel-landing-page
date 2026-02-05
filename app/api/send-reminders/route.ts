@@ -142,7 +142,7 @@ export async function GET(request: Request) {
             </div>
 
             <p style="color: #444444; font-size: 13px; text-align: center; margin-top: 24px;">
-              Manage your subscriptions at SubTracker
+              Manage your subscriptions at SubWise
             </p>
           </div>
         </div>
@@ -150,7 +150,7 @@ export async function GET(request: Request) {
 
       try {
         await transporter.sendMail({
-          from: `SubTracker <${process.env.EMAIL_USER}>`,
+          from: `SubWise <${process.env.EMAIL_USER}>`,
           to: email,
           subject: `Reminder: ${filteredReminders.length === 1 ? `${filteredReminders[0].subscription?.name || 'Subscription'} renewal coming up` : `${filteredReminders.length} subscriptions renewing soon`}`,
           html: htmlBody,

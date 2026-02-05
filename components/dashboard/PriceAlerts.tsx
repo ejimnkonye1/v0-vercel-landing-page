@@ -418,7 +418,7 @@ export function PriceAlerts() {
                                 How it works
                               </p>
                               <p className={`text-xs ${isDark ? 'text-[#555555]' : 'text-gray-500'}`}>
-                                Price data is crowdsourced from SubTracker users. When you add or update subscriptions,
+                                Price data is crowdsourced from SubWise users. When you add or update subscriptions,
                                 prices are anonymously aggregated to help everyone find the best deals.
                               </p>
                             </div>
