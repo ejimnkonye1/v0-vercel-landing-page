@@ -1,28 +1,14 @@
-'use client'
-
-import { useTheme } from '@/lib/theme-context'
-
 function Skeleton({ className = '' }: { className?: string }) {
-  const { isDark } = useTheme()
   return (
     <div
-      className={`animate-pulse rounded-lg ${
-        isDark ? 'bg-[#111111]' : 'bg-gray-200'
-      } ${className}`}
+      className={`animate-pulse rounded-lg bg-gray-200 dark:bg-[#111111] ${className}`}
     />
   )
 }
 
 function SectionSkeleton({ rows = 3 }: { rows?: number }) {
-  const { isDark } = useTheme()
   return (
-    <div
-      className={`rounded-2xl p-6 ${
-        isDark
-          ? 'bg-[#0A0A0A] border border-[#1A1A1A]'
-          : 'bg-gray-50 border border-gray-200'
-      }`}
-    >
+    <div className="rounded-2xl p-6 bg-gray-50 border border-gray-200 dark:bg-[#0A0A0A] dark:border-[#1A1A1A]">
       <Skeleton className="h-4 w-40 mb-5" />
       <div className="space-y-5">
         {Array.from({ length: rows }).map((_, i) => (
@@ -49,22 +35,11 @@ export default function SettingsLoading() {
       </div>
 
       <div className="max-w-2xl space-y-6">
-        {/* Theme */}
         <SectionSkeleton rows={1} />
-
-        {/* Profile */}
         <SectionSkeleton rows={1} />
-
-        {/* Notification Preferences */}
         <SectionSkeleton rows={4} />
-
-        {/* Display Preferences */}
         <SectionSkeleton rows={1} />
-
-        {/* Budget Settings */}
         <SectionSkeleton rows={1} />
-
-        {/* Change Password */}
         <SectionSkeleton rows={2} />
       </div>
     </div>

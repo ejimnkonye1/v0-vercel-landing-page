@@ -1,29 +1,15 @@
-'use client'
-
-import { useTheme } from '@/lib/theme-context'
-
 function Skeleton({ className = '', style }: { className?: string; style?: React.CSSProperties }) {
-  const { isDark } = useTheme()
   return (
     <div
       style={style}
-      className={`animate-pulse rounded-lg ${
-        isDark ? 'bg-[#111111]' : 'bg-gray-200'
-      } ${className}`}
+      className={`animate-pulse rounded-lg bg-gray-200 dark:bg-[#111111] ${className}`}
     />
   )
 }
 
 function ChartCardSkeleton({ className = '' }: { className?: string }) {
-  const { isDark } = useTheme()
   return (
-    <div
-      className={`rounded-2xl p-6 ${
-        isDark
-          ? 'bg-[#0A0A0A] border border-[#1A1A1A]'
-          : 'bg-gray-50 border border-gray-200'
-      } ${className}`}
-    >
+    <div className={`rounded-2xl p-6 bg-gray-50 border border-gray-200 dark:bg-[#0A0A0A] dark:border-[#1A1A1A] ${className}`}>
       <Skeleton className="h-4 w-40 mb-2" />
       <Skeleton className="h-3 w-56 mb-6" />
       <div className="flex items-end gap-2 h-44">
@@ -36,15 +22,8 @@ function ChartCardSkeleton({ className = '' }: { className?: string }) {
 }
 
 function PieChartSkeleton() {
-  const { isDark } = useTheme()
   return (
-    <div
-      className={`rounded-2xl p-6 ${
-        isDark
-          ? 'bg-[#0A0A0A] border border-[#1A1A1A]'
-          : 'bg-gray-50 border border-gray-200'
-      }`}
-    >
+    <div className="rounded-2xl p-6 bg-gray-50 border border-gray-200 dark:bg-[#0A0A0A] dark:border-[#1A1A1A]">
       <Skeleton className="h-4 w-44 mb-2" />
       <Skeleton className="h-3 w-52 mb-6" />
       <div className="flex items-center justify-center">
@@ -63,15 +42,8 @@ function PieChartSkeleton() {
 }
 
 function InsightsCardSkeleton() {
-  const { isDark } = useTheme()
   return (
-    <div
-      className={`rounded-2xl p-6 ${
-        isDark
-          ? 'bg-[#0A0A0A] border border-[#1A1A1A]'
-          : 'bg-gray-50 border border-gray-200'
-      }`}
-    >
+    <div className="rounded-2xl p-6 bg-gray-50 border border-gray-200 dark:bg-[#0A0A0A] dark:border-[#1A1A1A]">
       <Skeleton className="h-4 w-28 mb-4" />
       <div className="space-y-3">
         {[1, 2, 3, 4].map((i) => (

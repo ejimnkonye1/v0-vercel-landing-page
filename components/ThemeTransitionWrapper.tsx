@@ -151,7 +151,7 @@ export function ThemeTransitionWrapper({ children }: ThemeTransitionWrapperProps
       {/* Dark Theme Layer */}
       <div
         ref={darkLayerRef}
-        className="fixed inset-0 overflow-y-auto"
+        className="fixed inset-0 overflow-y-scroll"
         style={{
           clipPath: getClipPath('dark'),
           transition: transitioning && isDark
@@ -170,7 +170,7 @@ export function ThemeTransitionWrapper({ children }: ThemeTransitionWrapperProps
       {/* Light Theme Layer */}
       <div
         ref={lightLayerRef}
-        className="fixed inset-0 overflow-y-auto"
+        className="fixed inset-0 overflow-y-scroll"
         style={{
           clipPath: getClipPath('light'),
           transition: transitioning && !isDark

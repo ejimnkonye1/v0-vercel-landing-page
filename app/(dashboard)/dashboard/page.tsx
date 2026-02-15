@@ -196,7 +196,10 @@ export default function DashboardPage() {
       <AddSubscriptionModal
         isOpen={modalOpen}
         onClose={handleCloseModal}
-        onSaved={refetch}
+        onSaved={() => {
+          refetch()
+          toast(editingSub ? 'Subscription updated' : 'Subscription added', 'success')
+        }}
         editSubscription={editingSub}
         existingSubscriptions={subscriptions}
       />

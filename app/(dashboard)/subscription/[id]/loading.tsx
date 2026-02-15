@@ -1,21 +1,12 @@
-'use client'
-
-import { useTheme } from '@/lib/theme-context'
-
 function Skeleton({ className = '' }: { className?: string }) {
-  const { isDark } = useTheme()
   return (
     <div
-      className={`animate-pulse rounded-lg ${
-        isDark ? 'bg-[#111111]' : 'bg-gray-200'
-      } ${className}`}
+      className={`animate-pulse rounded-lg bg-gray-200 dark:bg-[#111111] ${className}`}
     />
   )
 }
 
 export default function SubscriptionDetailLoading() {
-  const { isDark } = useTheme()
-
   return (
     <div className="animate-in fade-in duration-300">
       {/* Back button */}
@@ -31,13 +22,7 @@ export default function SubscriptionDetailLoading() {
       </div>
 
       {/* Details card */}
-      <div
-        className={`rounded-2xl p-6 mb-4 ${
-          isDark
-            ? 'bg-[#0A0A0A] border border-[#1A1A1A]'
-            : 'bg-gray-50 border border-gray-200'
-        }`}
-      >
+      <div className="rounded-2xl p-6 mb-4 bg-gray-50 border border-gray-200 dark:bg-[#0A0A0A] dark:border-[#1A1A1A]">
         <div className="grid grid-cols-2 gap-6">
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <div key={i}>
@@ -49,13 +34,7 @@ export default function SubscriptionDetailLoading() {
       </div>
 
       {/* Notes / actions card */}
-      <div
-        className={`rounded-2xl p-6 ${
-          isDark
-            ? 'bg-[#0A0A0A] border border-[#1A1A1A]'
-            : 'bg-gray-50 border border-gray-200'
-        }`}
-      >
+      <div className="rounded-2xl p-6 bg-gray-50 border border-gray-200 dark:bg-[#0A0A0A] dark:border-[#1A1A1A]">
         <Skeleton className="h-4 w-20 mb-4" />
         <Skeleton className="h-3 w-full mb-2" />
         <Skeleton className="h-3 w-3/4 mb-2" />
