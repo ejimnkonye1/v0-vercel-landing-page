@@ -46,7 +46,7 @@ export function Sidebar({ isOpen, onClose, collapsed, onToggleCollapse }: Sideba
   }
 
   const sidebarContent = (
-    <aside className={`fixed left-0 top-0 h-screen flex flex-col z-40 transition-all duration-300 ${
+    <aside className={`fixed left-0 top-0 h-dvh flex flex-col z-40 transition-all duration-300 ${
       collapsed ? 'w-[68px]' : 'w-64'
     } ${
       isDark

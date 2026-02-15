@@ -71,14 +71,12 @@ export default function AnalyticsPage() {
           {/* Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
             {categoryLoading ? (
-              <div className={`rounded-2xl p-6 flex items-center justify-center h-80 ${
-                isDark
-                  ? 'bg-[#0A0A0A] border border-[#1A1A1A]'
-                  : 'bg-gray-50 border border-gray-200'
-              }`}>
-                <div className={`w-5 h-5 border-2 rounded-full animate-spin ${
-                  isDark ? 'border-[#222222] border-t-white' : 'border-gray-300 border-t-black'
-                }`} />
+              <div className={`rounded-2xl p-6 h-80 bg-gray-50 border border-gray-200 dark:bg-[#0A0A0A] dark:border-[#1A1A1A]`}>
+                <div className="animate-pulse h-4 w-32 mb-4 rounded-lg bg-gray-200 dark:bg-[#111111]" />
+                <div className="animate-pulse h-3 w-48 mb-6 rounded-lg bg-gray-200 dark:bg-[#111111]" />
+                <div className="flex items-center justify-center h-[60%]">
+                  <div className="animate-pulse w-40 h-40 rounded-full bg-gray-200 dark:bg-[#111111]" />
+                </div>
               </div>
             ) : (
               <SpendingPieChart data={categoryData} />

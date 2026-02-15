@@ -15,6 +15,15 @@ const transporter = nodemailer.createTransport({
   },
 })
 
+function getUserLocalHour(timezone: string): number {
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone,
+    hour: 'numeric',
+    hour12: false,
+  })
+  return parseInt(formatter.format(new Date()), 10)
+}
+
 export async function GET(request: Request) {
   // Verify cron secret to prevent unauthorized access
   const authHeader = request.headers.get('authorization')
@@ -41,6 +50,14 @@ export async function GET(request: Request) {
       return NextResponse.json({ message: 'No reminders to send', sent: 0 })
     }
 
+    // Immediately claim all reminders by marking them as sent to prevent
+    // duplicate emails from concurrent cron invocations (race condition).
+    const allReminderIds = reminders.map((r) => r.id)
+    await supabase
+      .from('reminders')
+      .update({ is_sent: true })
+      .in('id', allReminderIds)
+
     // Group reminders by user_id to batch emails per user
     const remindersByUser: Record<string, typeof reminders> = {}
     for (const reminder of reminders) {
@@ -60,6 +77,9 @@ export async function GET(request: Request) {
       if (userError || !userData?.user?.email) {
         console.error(`[send-reminders] Could not get email for user ${userId}:`, userError?.message)
         errors.push(`Could not get email for user ${userId}`)
+        // Un-claim these reminders so they can be retried next run
+        const ids = userReminders.map((r) => r.id)
+        await supabase.from('reminders').update({ is_sent: false }).in('id', ids)
         continue
       }
 
@@ -74,10 +94,19 @@ export async function GET(request: Request) {
 
       // Check if it's 9 AM in the user's timezone
       const userTimezone = prefs?.timezone || 'UTC'
-      const nowInUserTz = new Date().toLocaleString('en-US', { timeZone: userTimezone, hour12: false })
-      const userHour = new Date(nowInUserTz).getHours()
+      let userHour: number
+      try {
+        userHour = getUserLocalHour(userTimezone)
+      } catch {
+        // Invalid timezone — fall back to UTC
+        userHour = getUserLocalHour('UTC')
+      }
+
       if (userHour !== 9) {
         console.log(`[send-reminders] Skipping user ${userId}: local hour is ${userHour} (timezone: ${userTimezone})`)
+        // Un-claim these reminders — they'll be picked up when it's 9 AM in user's timezone
+        const ids = userReminders.map((r) => r.id)
+        await supabase.from('reminders').update({ is_sent: false }).in('id', ids)
         continue
       }
 
@@ -91,16 +120,7 @@ export async function GET(request: Request) {
         return true
       })
 
-      // Mark filtered-out reminders as sent so they don't pile up
-      const skippedIds = userReminders
-        .filter((r) => !filteredReminders.includes(r))
-        .map((r) => r.id)
-      if (skippedIds.length > 0) {
-        await supabase
-          .from('reminders')
-          .update({ is_sent: true })
-          .in('id', skippedIds)
-      }
+      // Skipped reminders stay marked as sent (claimed above) so they don't pile up
 
       if (filteredReminders.length === 0) continue
 
@@ -168,17 +188,13 @@ export async function GET(request: Request) {
           html: htmlBody,
         })
 
-        // Mark all sent reminders as sent
-        const reminderIds = filteredReminders.map((r) => r.id)
-        await supabase
-          .from('reminders')
-          .update({ is_sent: true })
-          .in('id', reminderIds)
-
         sentCount += filteredReminders.length
       } catch (emailError: any) {
         console.error(`[send-reminders] Failed to send email to ${email}:`, emailError.message)
         errors.push(`Failed to send email to ${email}: ${emailError.message}`)
+        // Un-claim reminders so they can be retried next run
+        const ids = filteredReminders.map((r) => r.id)
+        await supabase.from('reminders').update({ is_sent: false }).in('id', ids)
       }
     }
 

@@ -12,19 +12,26 @@ interface ThemeContextType {
   isAnimating: boolean
   clipCenter: ClipCenter
   toggleTheme: () => void
+  mounted: boolean
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 
+function getInitialTheme(): boolean {
+  if (typeof window !== 'undefined' && (window as any).__INITIAL_THEME_DARK !== undefined) {
+    return (window as any).__INITIAL_THEME_DARK
+  }
+  return true // SSR fallback
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [isDark, setIsDark] = useState(true)
+  const [isDark, setIsDark] = useState(getInitialTheme)
   const [isAnimating, setIsAnimating] = useState(false)
   const [clipCenter, setClipCenter] = useState<ClipCenter>({ x: 0, y: 0 })
   const [mounted, setMounted] = useState(false)
 
-  // Initialize theme from localStorage
+  // Read real theme from localStorage on mount and sync isDark
   useEffect(() => {
-    setMounted(true)
     const stored = localStorage.getItem('theme')
     if (stored) {
       setIsDark(stored === 'dark')
@@ -32,6 +39,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
       setIsDark(prefersDark)
     }
+    setMounted(true)
   }, [])
 
   // Update document class and localStorage when theme changes
@@ -67,6 +75,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         isAnimating,
         clipCenter,
         toggleTheme,
+        mounted,
       }}
     >
       {children}

@@ -41,6 +41,11 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`font-sans antialiased bg-background text-foreground`}>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('theme');var d=t==='dark'||(t==null&&window.matchMedia('(prefers-color-scheme:dark)').matches);if(d){document.documentElement.classList.add('dark');document.documentElement.style.colorScheme='dark';document.documentElement.style.backgroundColor='#0a0a0a'}else{document.documentElement.classList.remove('dark');document.documentElement.style.colorScheme='light';document.documentElement.style.backgroundColor='#ffffff'}window.__INITIAL_THEME_DARK=d}catch(e){window.__INITIAL_THEME_DARK=true}})()`,
+          }}
+        />
         <ThemeProvider>
           <ThemeTransitionWrapper>
             {children}

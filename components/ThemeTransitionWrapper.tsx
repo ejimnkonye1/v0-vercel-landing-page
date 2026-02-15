@@ -8,12 +8,12 @@ interface ThemeTransitionWrapperProps {
 }
 
 export function ThemeTransitionWrapper({ children }: ThemeTransitionWrapperProps) {
-  const { isDark, isAnimating, clipCenter } = useTheme()
+  const { isDark, isAnimating, clipCenter, mounted: themeMounted } = useTheme()
   const [maxRadius, setMaxRadius] = useState(2000)
   const darkLayerRef = useRef<HTMLDivElement>(null)
   const lightLayerRef = useRef<HTMLDivElement>(null)
   const isScrolling = useRef(false)
-  const [mounted, setMounted] = useState(false)
+  const [layersReady, setLayersReady] = useState(false)
 
   // Track animation with explicit radius values
   const [darkRadius, setDarkRadius] = useState(2000)
@@ -22,7 +22,7 @@ export function ThemeTransitionWrapper({ children }: ThemeTransitionWrapperProps
   const savedClipCenter = useRef({ x: 0, y: 0 })
 
   useEffect(() => {
-    setMounted(true)
+    setLayersReady(true)
     const calculateMaxRadius = () => {
       const radius = Math.sqrt(
         Math.pow(window.innerWidth, 2) + Math.pow(window.innerHeight, 2)
@@ -37,7 +37,7 @@ export function ThemeTransitionWrapper({ children }: ThemeTransitionWrapperProps
 
   // Initialize radius based on theme after mount
   useEffect(() => {
-    if (mounted && !transitioning) {
+    if (layersReady && !transitioning) {
       if (isDark) {
         setDarkRadius(maxRadius)
         setLightRadius(0)
@@ -46,14 +46,21 @@ export function ThemeTransitionWrapper({ children }: ThemeTransitionWrapperProps
         setLightRadius(maxRadius)
       }
     }
-  }, [mounted, isDark, maxRadius, transitioning])
+  }, [layersReady, isDark, maxRadius, transitioning])
 
   // Handle theme change animation
   useEffect(() => {
-    if (isAnimating && mounted) {
+    if (isAnimating && layersReady) {
       // Save the clip center immediately
       savedClipCenter.current = { ...clipCenter }
       setTransitioning(true)
+
+      // Sync scroll positions before transition starts
+      if (darkLayerRef.current && lightLayerRef.current) {
+        const sourceRef = isDark ? lightLayerRef.current : darkLayerRef.current
+        const targetRef = isDark ? darkLayerRef.current : lightLayerRef.current
+        targetRef.scrollTop = sourceRef.scrollTop
+      }
 
       // Set the NEW theme to start at 0, then expand
       if (isDark) {
@@ -78,7 +85,7 @@ export function ThemeTransitionWrapper({ children }: ThemeTransitionWrapperProps
         })
       }
     }
-  }, [isAnimating, isDark, clipCenter, maxRadius, mounted])
+  }, [isAnimating, isDark, clipCenter, maxRadius, layersReady])
 
   // Reset after animation
   useEffect(() => {
@@ -138,9 +145,9 @@ export function ThemeTransitionWrapper({ children }: ThemeTransitionWrapperProps
     return (layer === 'dark' && isDark) || (layer === 'light' && !isDark) ? 60 : 50
   }
 
-  if (!mounted) {
+  if (!layersReady || !themeMounted) {
     return (
-      <div className="min-h-screen bg-background text-foreground">
+      <div className="min-h-screen bg-background text-foreground" style={{ visibility: 'hidden' }}>
         {children}
       </div>
     )
@@ -151,8 +158,9 @@ export function ThemeTransitionWrapper({ children }: ThemeTransitionWrapperProps
       {/* Dark Theme Layer */}
       <div
         ref={darkLayerRef}
-        className="fixed inset-0 overflow-y-scroll"
+        className="fixed inset-0 overflow-y-auto overflow-x-hidden"
         style={{
+          scrollbarGutter: 'stable',
           clipPath: getClipPath('dark'),
           transition: transitioning && isDark
             ? 'clip-path 1.2s cubic-bezier(0.4, 0, 0.2, 1)'
@@ -170,8 +178,9 @@ export function ThemeTransitionWrapper({ children }: ThemeTransitionWrapperProps
       {/* Light Theme Layer */}
       <div
         ref={lightLayerRef}
-        className="fixed inset-0 overflow-y-scroll"
+        className="fixed inset-0 overflow-y-auto overflow-x-hidden"
         style={{
+          scrollbarGutter: 'stable',
           clipPath: getClipPath('light'),
           transition: transitioning && !isDark
             ? 'clip-path 1.2s cubic-bezier(0.4, 0, 0.2, 1)'

@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import { FiMenu } from 'react-icons/fi'
 import { AuthProvider } from '@/components/auth/AuthProvider'
 import { Sidebar } from '@/components/dashboard/Sidebar'
@@ -9,14 +8,20 @@ import { SubscriptionsProvider } from '@/contexts/SubscriptionsContext'
 import { PreferencesProvider } from '@/contexts/PreferencesContext'
 import { ToastProvider } from '@/contexts/ToastContext'
 import { useTheme } from '@/lib/theme-context'
+import {
+  useSidebarCollapsed,
+  useSidebarOpen,
+  setSidebarOpen,
+  toggleSidebarCollapsed,
+} from '@/lib/sidebar-store'
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const sidebarOpen = useSidebarOpen()
+  const sidebarCollapsed = useSidebarCollapsed()
   const { isDark } = useTheme()
 
   return (
@@ -53,7 +58,7 @@ export default function DashboardLayout({
           isOpen={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
           collapsed={sidebarCollapsed}
-          onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+          onToggleCollapse={() => toggleSidebarCollapsed()}
         />
 
         <main className={`min-h-screen pt-14 lg:pt-0 transition-all duration-300 ${
