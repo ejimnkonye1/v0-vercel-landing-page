@@ -15,15 +15,6 @@ const transporter = nodemailer.createTransport({
   },
 })
 
-function getUserLocalHour(timezone: string): number {
-  const formatter = new Intl.DateTimeFormat('en-US', {
-    timeZone: timezone,
-    hour: 'numeric',
-    hour12: false,
-  })
-  return parseInt(formatter.format(new Date()), 10)
-}
-
 export async function GET(request: Request) {
   // Verify cron secret to prevent unauthorized access
   const authHeader = request.headers.get('authorization')
@@ -91,24 +82,6 @@ export async function GET(request: Request) {
         .select('*')
         .eq('user_id', userId)
         .single()
-
-      // Check if it's 9 AM in the user's timezone
-      const userTimezone = prefs?.timezone || 'UTC'
-      let userHour: number
-      try {
-        userHour = getUserLocalHour(userTimezone)
-      } catch {
-        // Invalid timezone — fall back to UTC
-        userHour = getUserLocalHour('UTC')
-      }
-
-      if (userHour !== 9) {
-        console.log(`[send-reminders] Skipping user ${userId}: local hour is ${userHour} (timezone: ${userTimezone})`)
-        // Un-claim these reminders — they'll be picked up when it's 9 AM in user's timezone
-        const ids = userReminders.map((r) => r.id)
-        await supabase.from('reminders').update({ is_sent: false }).in('id', ids)
-        continue
-      }
 
       const emailRenewalEnabled = prefs?.email_reminders_renewal ?? true
       const emailTrialEnabled = prefs?.email_reminders_trial ?? true
