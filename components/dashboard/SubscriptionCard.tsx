@@ -201,7 +201,7 @@ export function SubscriptionCard({
       </p>
 
       {/* Actions */}
-      <div className="flex items-center gap-2 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-200">
+      <div className="flex items-center gap-2 xl:opacity-0 xl:group-hover:opacity-100 transition-opacity duration-200">
         <button
           onClick={(e) => {
             e.preventDefault()
